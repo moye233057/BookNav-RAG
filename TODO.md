@@ -111,9 +111,9 @@
 [x] start.py + 端口表（截图仍缺）
 [x] README：亮点表、局限、BookNav 命名（截图仍缺）
 [x] REL·1/2/3 演示可靠性
-[ ] 本机文件夹 `self-rag` → `book-nav-rag`（关占用后 Rename-Item）
+[x] 本机文件夹 `self-rag` → `book-nav-rag`
 [ ] pytest 全绿（本机）：python -m pytest tests -q
-[ ] git init → 首 commit 目检 → push GitHub / Gitee
+[x] git init → 首 commit 目检 → push GitHub / Gitee（`b666325`）
 ```
 
 ---
