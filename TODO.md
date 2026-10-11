@@ -109,7 +109,7 @@
 [x] PROCESS_ONLY = ()
 [x] 公有样例 PDF + 演示三问可复现
 [x] start.py + 端口表（截图仍缺）
-[x] README：亮点表、局限、BookNav 命名（截图仍缺）
+[x] README：客观介绍 / 局限 / 命名说明（已去掉「面试可深挖」表；截图仍缺）
 [x] REL·1/2/3 演示可靠性
 [x] 本机文件夹 `self-rag` → `book-nav-rag`
 [ ] pytest 全绿（本机）：python -m pytest tests -q
