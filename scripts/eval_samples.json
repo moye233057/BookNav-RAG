@@ -1,0 +1,119 @@
+{
+  "corpus_sources": ["demo_handbook"],
+  "notes": "公开评测样本：只覆盖 samples/demo_handbook.pdf（自造可再分发）。第三方手册上的大样本集见本机 scripts/eval_samples.private.json（gitignore，不进仓）。",
+  "samples": [
+    {
+      "id": "pos-fold-01",
+      "group": "pos-single-doc",
+      "question": "支架怎么折叠",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [3],
+      "grounding": "块 demo_handbook 折叠支架节：按下折叠开关后支架臂向内侧收拢。"
+    },
+    {
+      "id": "pos-fold-02",
+      "group": "pos-paraphrase",
+      "question": "怎么把支架收起来",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [3],
+      "grounding": "同折叠支架节，口语改写。"
+    },
+    {
+      "id": "pos-unfold-01",
+      "group": "pos-single-doc",
+      "question": "支架怎么展开",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [4],
+      "grounding": "块展开支架节：再次按下折叠开关向外展开。"
+    },
+    {
+      "id": "pos-charge-01",
+      "group": "pos-single-doc",
+      "question": "充电指示灯什么颜色表示充满",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [5],
+      "grounding": "充电说明：充满后变为绿色。"
+    },
+    {
+      "id": "pos-spec-01",
+      "group": "pos-single-doc",
+      "question": "演示设备型号是什么",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [6],
+      "grounding": "规格参数：虚构型号 DEMO-01。"
+    },
+    {
+      "id": "pos-safety-01",
+      "group": "pos-single-doc",
+      "question": "潮湿环境可以充电吗",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [2],
+      "grounding": "安全须知：请勿在潮湿环境中给设备充电。"
+    },
+    {
+      "id": "pos-source-01",
+      "group": "pos-source-filter",
+      "question": "折叠开关按下后支架臂怎么动",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [3],
+      "filters": {"source": "demo_handbook", "tags": []},
+      "grounding": "来源筛选强制 demo_handbook。"
+    },
+    {
+      "id": "pos-identity-01",
+      "group": "pos-identity-followup",
+      "question": "刚才那份资料来自哪份文档",
+      "expect": "hit",
+      "source": "demo_handbook",
+      "pages": [3],
+      "turns": [
+        {
+          "question": "支架怎么折叠",
+          "text": "支架怎么折叠",
+          "answer": "按下折叠开关，左右支架臂向内侧收拢并锁止。",
+          "route": "retrieve",
+          "filters": {"source": "demo_handbook", "tags": []},
+          "tags": [{"field": "source", "value": "demo_handbook"}]
+        }
+      ],
+      "grounding": "身份追问：沿用上一轮检索来源。"
+    },
+    {
+      "id": "chitchat-01",
+      "group": "chitchat",
+      "question": "你好",
+      "expect": "chitchat"
+    },
+    {
+      "id": "chitchat-02",
+      "group": "chitchat",
+      "question": "谢谢",
+      "expect": "chitchat"
+    },
+    {
+      "id": "neg-out-01",
+      "group": "neg-outdomain",
+      "question": "红烧肉怎么做好吃",
+      "expect": "refuse"
+    },
+    {
+      "id": "neg-out-02",
+      "group": "neg-outdomain",
+      "question": "Python 怎么读 JSON 文件",
+      "expect": "refuse"
+    },
+    {
+      "id": "neg-near-01",
+      "group": "neg-near-domain",
+      "question": "这台车的胎压监测怎么重置",
+      "expect": "refuse"
+    }
+  ]
+}

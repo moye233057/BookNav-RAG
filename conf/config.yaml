@@ -1,0 +1,8 @@
+# 各环境相同的本项目公共常量。不要写 ROOT、host、port、第三方地址、密钥。
+
+data_source: data/source
+data_result: data/result
+data_lancedb: data/lancedb
+models: models
+# 向量权重目录名（models/ 下面那一层）；换权重改这里，再跑 scripts/download_embed.py
+models_embedder: bge-m3

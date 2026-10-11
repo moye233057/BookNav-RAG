@@ -1,0 +1,28 @@
+# 版本只钉本仓代码直接 import 的包，不列传递依赖（pyarrow、onnxruntime 等由上游锁定）。
+# 环境：conda env rag，Python 3.12.14。装法：conda activate rag 再 pip install -r requirements.txt
+# 与 pyproject.toml 的 [project] dependencies 必须逐条一致（改这里也要改那边）；
+# pip install -e . 读的是 pyproject，requirements.txt 是 conda/venv 的直接装法。
+
+# 离线抽取层
+pymupdf4llm==1.28.2
+
+# 在线服务
+fastapi==0.141.1
+uvicorn==0.53.0
+
+# 在线编排与生成
+langgraph==1.2.11
+langchain-openai==1.6.0
+
+# 向量层与召回
+lancedb==0.37.1
+pylance==12.0.0
+
+# HTTP 客户端：调本仓向量服务 8030（KV 实验脚本另用它打外仓 /extract）
+requests==2.34.2
+
+# 向量模型服务 embed/ 与 scripts/download_embed.py 用；缺这三个 embed_server.py 起不来
+torch==2.14.0
+sentence-transformers==6.0.1
+transformers==5.17.0
+modelscope==1.40.1

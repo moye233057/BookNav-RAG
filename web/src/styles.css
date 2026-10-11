@@ -1,0 +1,268 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Segoe UI", "PingFang SC", sans-serif;
+  color: #1a1a1a;
+  background: #f3f4f6;
+}
+
+.layout {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 0;
+}
+
+.topbar {
+  grid-column: 1 / -1;
+  flex: none;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.topbar p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #e5e7eb;
+}
+
+.thread {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.thread-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.sidebar {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-title {
+  flex: none;
+  margin: 0;
+  padding: 16px 20px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebar-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.empty,
+.status {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.bubble {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+
+.bubble p {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bubble-user {
+  background: #e8f1ff;
+}
+
+.reply-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+}
+
+.reply-row .bubble {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.sources-button {
+  flex: none;
+  margin-top: 2px;
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d4ed8;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sources-button[aria-pressed="true"] {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.bubble-assistant {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.bubble-error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.answer {
+  margin-bottom: 0;
+}
+
+.citation-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.citation {
+  margin: 0 0 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.citation:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.citation-meta {
+  font-size: 12px;
+  color: #4b5563;
+  word-break: break-all;
+}
+
+.citation-snippet {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  word-break: break-word;
+}
+
+.composer {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid #e5e7eb;
+  align-items: end;
+}
+
+.tag-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1d4ed8;
+  font-size: 12px;
+}
+
+.composer-label {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.composer-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.ask-button {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #1d4ed8;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ask-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    height: auto;
+    min-height: 100%;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .main {
+    border-right: 0;
+  }
+
+  .thread {
+    flex: none;
+    height: 72vh;
+  }
+
+  .sidebar {
+    height: 40vh;
+    border-top: 1px solid #e5e7eb;
+  }
+}
