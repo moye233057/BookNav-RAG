@@ -63,7 +63,7 @@ def _rrf_fuse(
 
     功能：score = Σ 1/(k+rank)，再加过滤标签加权（命中 N 条标签 → min(N × TAG_BOOST_PER_HIT, TAG_BOOST_MAX)）。
          标签是软信号，不加权的块不会因为没命中标签被丢掉（ADR-0035）。
-         命中对象取先出现的那路，再写融合分。向量路过的 id 另带 vector_score（余弦），供拒答阈值，不进生成合同。
+         命中对象取先出现的那路，再写融合分。向量路过的 id 另带 vector_score（余弦），供拒答阈值，不进生成字段约定。
     输入：vector_ranked / bm25_ranked — 已按各路分数降序的命中；top_k — 候选窗口截断；
           boost_by_id — {id: 命中标签条数}，空则不加权。
     输出：融合后的检索命中列表。
@@ -98,7 +98,7 @@ def _merge_catalogue_neighbors(siblings: list[dict], center_id: str, max_tokens:
     以命中块为中心，把同一目录标题下的邻块并进正文。
 
     功能：先向后、再向前，直到粗估 token 超过上限。页码取并集。
-    应用场景：精排截断后的同节邻块。
+    应用场景：重排截断后的同节邻块。
     输入：siblings — 同来源同标题、已按 id 排好；center_id — 命中块 id；max_tokens — 上限。
     输出：{text, pages}。
     """
@@ -208,9 +208,9 @@ class KnowledgeBase:
         """
         过滤后混合检索，返回检索命中。
 
-        功能：来源硬筛；LanceDB 近邻 + BM25 再 RRF，最后按命中标签条数加权（tags 不硬切，ADR-0035）。
+        功能：来源强制筛选；LanceDB 近邻 + BM25 再 RRF，最后按命中标签条数加权（tags 不做强制筛选，ADR-0035）。
         应用场景：召回层混合检索。
-        输入：query_vector — 查询向量；filters — source 硬筛 + tags 加权，空则该维不限；
+        输入：query_vector — 查询向量；filters — source 强制筛选 + tags 加权，空则该维不限；
               top_k — 生成窗口，用来算候选条数；
               query_text — 查询原文，给 BM25。
         输出：[{id, kind, text, score, source, pages}, ...]，按加权后的融合分降序。
@@ -261,7 +261,7 @@ class KnowledgeBase:
         功能：先用 source_matches 收窄，再用同一份倒排打查询，命中标签的按同一套加权抬分（ADR-0035）；
               命中带 lexical_fallback=True。不需要查询向量，所以 embed 服务挂了也能用。
         应用场景：retrieve_hits 里 embedding 失败时。
-        输入：query_text — 查询原文；filters — source 硬筛 + tags 加权，空则该维不限；top_k — 生成窗口。
+        输入：query_text — 查询原文；filters — source 强制筛选 + tags 加权，空则该维不限；top_k — 生成窗口。
         输出：同上形状的命中列表，条数 ≤ 候选窗口，按加权后的 BM25 分降序。
               与融合路一致：先在词面窗口里截候选，再按标签加权重排。
         """
@@ -294,11 +294,11 @@ class KnowledgeBase:
 
     def expand_hits_by_catalogue(self, hits: list[dict]) -> list[dict]:
         """
-        精排后按目录标题把同节邻块并进命中正文。
+        重排后按目录标题把同节邻块并进命中正文。
 
         功能：空标题不并；同一标题只保留窗口里最先出现的那条，正文换成邻块拼接。
              不改命中字段名。
-        应用场景：精排节点截 TOP_K 之后、拒答与组提示之前；评测口对齐生成窗口。
+        应用场景：重排节点截 TOP_K 之后、拒答与组提示之前；评测口对齐生成窗口。
         输入：hits — 已截到 TOP_K 的检索命中。
         输出：同形状命中，条数可能更少（同标题去重）。
         """

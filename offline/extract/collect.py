@@ -2,7 +2,7 @@
 """
 写出可分块原文。
 
-职责：把基础信息、文件内容、内容生成信息收成一份 JSON。对外合同见蓝图第 8 节。
+职责：把基础信息、文件内容、内容生成信息收成一份 JSON。对外约定见目标架构第 8 节。
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ def collect(
     """
     写出 chunkable_source.json。
 
-    功能：有 pages 则带 pages 与目录区间；否则带 text。溯源字段不进检索合同。
+    功能：有 pages 则带 pages 与目录区间；否则带 text。溯源字段不进检索约定。
     应用场景：抽取层最后一步。
     输入：probe / content / tags / extract_method；result_dir — 本源产出目录。
     输出：写出的路径。

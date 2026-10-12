@@ -2,7 +2,7 @@
 
 读 `E:\Project\GitHub\RAG` 里的实现，按各仓 README / 代码自己的叫法写设计；最后一节对照 `moye-notes/09-AI/RAG` 已有笔记。不把七家模块名收成一套。向量库与自建选型不在本文拍板。
 
-分仓细读（技术栈 / 模块 / 链路）就是下面各节：一篇一仓，顺序与 `E:\Project\GitHub\RAG\` 下的目录一致。
+分仓细读（技术栈 / 模块 / 流程）就是下面各节：一篇一仓，顺序与 `E:\Project\GitHub\RAG\` 下的目录一致。
 
 产品仓路径均相对 `E:\Project\GitHub\RAG\`。
 
@@ -81,7 +81,7 @@ RAG 主路径：collector 把文件/链接变成 `{ pageContent, metadata }` →
 
 聊天：`streamChatWithWorkspace`。slash command → 匹配 Agent 则 **退出标准 RAG** 走 Aibitat / Agent Flows / MCP → 否则历史 + Memories + pinned + 向量召回 + `fillSourceWindow` 引用窗口 → `chatMode=query` 且无 context 则拒答 → 压缩消息 → 流式生成。Docker 版有 admin/manager/default 与 workspace 成员。
 
-沾边笔记：解析（collector / Tesseract，对笔记里 MinerU/OCR）、TextSplitter（《06》《07》）、向量近邻（《07》）。Agent 在这个仓里是旁路，不是检索模块。笔记没有 Pin 全文直注、没有「query 模式无命中则拒答」。
+沾边笔记：解析（collector / Tesseract，对笔记里 MinerU/OCR）、TextSplitter（《06》《07》）、向量近邻（《07》）。Agent 在这个仓里是支线，不是检索模块。笔记没有 Pin 全文直注、没有「query 模式无命中则拒答」。
 
 ---
 
@@ -119,7 +119,7 @@ RAG 主路径：collector 把文件/链接变成 `{ pageContent, metadata }` →
 
 自称通用知识库管理平台。React 管理台 + FastAPI。业务名是 documents / ingestion / indexing / retrieval / qa / evaluation。`ParserRegistry` 十几种解析；`chunking.py` 六种策略（fixed / structural / table-aware / parent-child / semantic / chat-record）。向量走 Milvus/Zilliz 或 local；稀疏是进程内 `sparse_index.py` BM25；`hybrid.py` min-max 归一后 alpha 融合（默认 0.7）。Rerank 有 HTTP 客户端和 overlap fallback。`_rewrite_query` 只去空白，不是 LLM 改写。无 Agent、无 GraphRAG。QA 证据不足则固定拒答。有 Hit@1 / MRR 评测页，飞书/企微/钉钉回调进同一套 QA。
 
-沾边笔记：解析（PaddleOCR）、多种切分（《06》只详细写了语义+token）、混合检索、引用、评测。权限是 `PermissionChecker` 插件 + `source_module`，不是 SaaS 多租户。
+沾边笔记：解析（PaddleOCR）、多种切分（《06》只详细写了语义分块+token）、混合检索、引用、评测。权限是 `PermissionChecker` 插件 + `source_module`，不是 SaaS 多租户。
 
 ---
 
@@ -193,7 +193,7 @@ AnythingLLM 是这批里唯一主路径不做 BM25 的产品仓。笔记 `07` �
 
 `08` 和轻量案例：抽实体/关系/社区报告，导出 CSV，**在线遍历交给平台**。RAGFlow 在线 `use_kg`；WeKnora 离线 `graph.go` + Neo4j，在线并行 entity search。QAnything、AnythingLLM、BISHENG、rag-knowledge-system 没有这条路。不能从笔记推断「做 RAG 就要上图」。
 
-### 6. Agent 在多数仓里是旁路，不是 RAG 的下一层
+### 6. Agent 在多数仓里是支线，不是 RAG 的下一层
 
 AnythingLLM：命中 Agent 则离开 `stream.js` 的 RAG 流。RAGFlow：Canvas / Agentic RAG 图编排。WeKnora：ReAct 另一条。BISHENG：灵思 + 工作流节点。QAnything 只有 Bot 配置和联网搜。rag-knowledge-system 没有 Agent。
 
@@ -218,4 +218,4 @@ jieba 分词、停用词表、word2vec、Gensim LDA/LSI：产品仓的检索输�
 
 ## 本文不拍的板
 
-对照当时留下的选型（向量库存哪、自建范围、是否接 anyurl2text、第一版模块）已在后续 ADR 与 [架构蓝图](architecture.md) 拍板。本文仍只负责产品仓怎么设计、和笔记差在哪，不改写成自建规范。
+对照当时留下的选型（向量库存哪、自建范围、是否接 anyurl2text、第一版模块）已在后续 ADR 与 [目标架构](architecture.md) 拍板。本文仍只负责产品仓怎么设计、和笔记差在哪，不改写成自建规范。

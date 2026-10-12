@@ -2,7 +2,7 @@
 """
 按来源替换写入不得「先删光再失败」。
 
-职责：钉住 LanceVectorStore.replace_source —— 暂存 add 失败时旧正式来源行数不变。
+职责：锁定 LanceVectorStore.replace_source —— 暂存 add 失败时旧正式来源行数不变。
 """
 
 from __future__ import annotations

@@ -2,10 +2,10 @@
 """
 分块与页码的单元测试。
 
-职责：钉住 offline/vector/chunk.py 里三件必须成立的事——
+职责：锁定 offline/vector/chunk.py 里三件必须成立的事——
       1. 超限切出来的每个子块只带自己覆盖的页（P0·5；以前是整节页码复制给每个子块）；
       2. 页归属：一页只归第一条命中的目录区间，导航页不进；
-      3. token 估算的当前口径（口径若改，这里必须同轮改）。
+      3. token 估算的当前做法（当前做法若改，这里必须同轮改）。
 
 应用场景：改 chunk.py 之后跑 python -m pytest tests/test_chunk.py。
 """
@@ -96,8 +96,8 @@ def test_空正文的页不会被算进任何块():
     assert chunks[0]["metadata"]["pages"] == [1]
 
 
-def test_装配函数返回的块正文不含哨兵字符():
-    """页间分隔用的哨兵必须还原成空行，不能漏进正文。"""
+def test_装配函数返回的块正文不含分隔符():
+    """页间分隔用的分隔符必须还原成空行，不能漏进正文。"""
     packed = _assemble_pieces_with_pages(["第一页" * 100, "第二页" * 100], [1, 2], 100000)
 
     assert len(packed) == 1
@@ -153,8 +153,8 @@ def test_一页只归第一条命中的区间():
     assert rows[0]["catalogue_title"] == "甲节"
 
 
-def test_落在所有区间外的页会被丢弃且不报错():
-    """归页这一步确实不说话（P1·8）：丢页由 scripts/verify_ingest.py 分类后报出来。"""
+def test_所有区间外的页会被丢弃且不报错():
+    """按目录分页这一步确实不说话（P1·8）：丢页由 scripts/verify_ingest.py 分类后报出来。"""
     pages = [{"page": 99, "text": "区间外的正文"}]
     ranges = [{"title": "甲节", "start_page": 1, "end_page": 10}]
 
@@ -178,8 +178,8 @@ def test_导航页判定能说出原因():
     assert navigation_page_reason("#### 正常小节\n操作步骤见下。") is None
 
 
-def test_导航页布尔门面与原因判定一致():
-    """is_navigation_page 只是 navigation_page_reason 的布尔门面，两者不许分叉。"""
+def test_导航页判定的布尔包装与原因判定一致():
+    """is_navigation_page 只是 navigation_page_reason 的布尔包装（只看有没有原因），两者不许分叉。"""
     samples = [
         "目 录\n第一章 ........ 1",
         "图片索引\n|插图|说明|",
@@ -192,11 +192,11 @@ def test_导航页布尔门面与原因判定一致():
         assert is_navigation_page(text) is (navigation_page_reason(text) is not None)
 
 
-# ========== token 估算口径 ==========
+# ========== token 估算的当前做法 ==========
 
 
 def test_token估算按字符数一半():
-    """当前口径：中文约 2 字 1 token。口径改了这个用例要同轮改。"""
+    """当前做法：中文约 2 字 1 token。这个做法改了，本用例要同轮改。"""
     assert estimate_tokens_by_chars("") == 1
     assert estimate_tokens_by_chars("一二三四") == 2
     assert estimate_tokens_by_chars("a" * 101) == 50

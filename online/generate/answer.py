@@ -39,8 +39,8 @@ def write_qa_result(name: str, payload) -> None:
     把 JSON 写到 data/result/qa/<name>。
 
     功能：DEBUG_WRITE_QA 关时直接返回，响应路径不碰磁盘。
-    应用场景：拒答、闲聊、检索生成三条分支的调试题材落盘。
-    为什么默认关：每问覆盖写一次，写盘抛 PermissionError 会穿透 router 变成 HTTP 500（TODO P1·20）。
+    应用场景：拒答、闲聊、检索生成三条分支的调试题材写入磁盘。
+    为什么默认关：每问覆盖写一次，写入磁盘抛 PermissionError 会穿透 router 变成 HTTP 500（TODO P1·20）。
     """
     if not DEBUG_WRITE_QA:
         return
@@ -93,7 +93,7 @@ def chat_text(prompt: str) -> str:
     调 Chat，取助手文本。
 
     功能：关思考模式；LCEL 产出字符串。
-    应用场景：改写槽、意图分类、闲聊、入库抽标签。
+    应用场景：改写预留实现、意图分类、闲聊、入库抽标签。
     输入：prompt — user 正文。
     输出：助手文本（已 strip）。
     异常：缺 API key 或 Chat 失败 → RuntimeError。
@@ -123,7 +123,7 @@ def hits_contain_query_term(hits: list[dict], question: str) -> bool:
     """
     命中正文里是否真的出现了查询词。
 
-    功能：按 tokenize 的词做判断（与 BM25 同一切词口径），命中任意一条即算。
+    功能：按 tokenize 的词做判断（与 BM25 同一套切词判据），命中任意一条即算。
     应用场景：词面兜底时的拒答判据。
     输入：hits — 检索命中；question — 用户原文（或检索用问句）。
     输出：是否有词面重合。
@@ -139,13 +139,13 @@ def hits_contain_query_term(hits: list[dict], question: str) -> bool:
 
 def should_refuse(hits: list[dict], question: str = "", min_score: float | None = None) -> bool:
     """
-    拒答槽：空命中，或最好的向量余弦低于 min_score；词面兜底另有一套判据。
+    拒答预留实现：空命中，或最好的向量余弦低于 min_score；词面兜底另有一套判据。
 
     功能：阈值打在余弦上，不打在 RRF 融合分上。
           min_score 留空则用 conf.REFUSE_MIN_SCORE；`scripts/eval_kb.py --calibrate` 靠它扫阈值，
           判据只保留这一份实现，不在评测口重抄一遍。
           向量路过的命中按余弦判；词面兜底的命中没有 vector_score，
-          不能沿用「没有向量分就放行」——那等于在最该谨慎的时候关掉闸门，
+          不能沿用「没有向量分就放行」——那等于在最该谨慎的时候关掉拒答开关，
           改为要求命中里出现查询词（REFUSE_ON_LEXICAL_FALLBACK）。
     应用场景：在线图 generate 节点；评测口负样本；阈值校准扫点。
     输入：hits — 检索命中；question — 查询原文，词面兜底时必传；min_score — 覆盖阈值，≤0 视为关掉余弦判据。

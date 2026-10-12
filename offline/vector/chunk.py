@@ -5,7 +5,7 @@
 使用前注意事项：
 - 共享入口是 chunks_from_chunkable_source：有目录区间按标题拼块，否则按段/页。
 - 有印刷目录时优先按目录标题拼块，不要先按段切开再丢掉标题。
-- 正文页归进目录标题在本文件，不从抽取方式 import。
+- 正文页按目录标题分页在本文件，不从抽取方式 import。
 - 无目录时退回按空行分段累加；token 按「中文约 2 字 1 token」粗估，不是 tiktoken。
 - PDF 无目录时若文本带「=== 第N页 ===」页眉，按页组块（本仓 PDF 抽页直出 pages，不带这种页眉，认不出就退回按段）。
 """
@@ -25,7 +25,7 @@ def split_doc_text_into_chunks(doc_text: str, max_doc_tokens: int = 1800) -> lis
     按空行分段累积分块，超过 max_doc_tokens 就切开。
 
     功能：给没有目录结构的纯文本用。
-    应用场景：手册抽不出印刷目录时的退路；KV 实验脚本按 kind 分块也调它（未接线）。
+    应用场景：手册抽不出印刷目录时的退路；KV 实验脚本按 kind 分块也调它（还没接进流程）。
     输入：doc_text — 原文；max_doc_tokens — 单块上限（粗估 token）。
     输出：块文本列表；原文为空时 []。
     """
@@ -152,7 +152,7 @@ def navigation_page_reason(text: str) -> str | None:
 
     功能：页首 80 字含「目 录」→ 目录；含「图片索引 / 字母索引」→ 索引；
           点线目录行至少 5 行且过半 → 章扉页；都不像 → None（当正文）。
-    应用场景：assign_content_to_catalogue 归类前丢导航页；入库验收口按原因给丢页贴标签。
+    应用场景：assign_content_to_catalogue 按目录分页前丢导航页；入库验收口按原因给丢页贴标签。
     输入：text — 该页原始 markdown。
     输出：NAVIGATION_TOC / NAVIGATION_INDEX / NAVIGATION_CHAPTER_COVER；是正文则 None。
     """
@@ -175,7 +175,7 @@ def is_navigation_page(text: str) -> bool:
     这一页是目录、图片索引、字母索引或章扉页，不当正文。
 
     功能：navigation_page_reason 的布尔门面（导航页判据只有那一份实现）。
-    应用场景：assign_content_to_catalogue 归类前丢掉导航页。
+    应用场景：assign_content_to_catalogue 按目录分页前丢掉导航页。
     输入：text — 该页原始 markdown。
     输出：True 表示跳过。
     """
@@ -189,7 +189,7 @@ def clean_page_text(text: str, strip_images: bool = True) -> str:
     功能：**段边界保留**——页内空行仍是空行（`\\n\\n`），段内换行压成一个空格。
           分段累积分块（split_doc_text_into_chunks 按 `\\n\\n` 切）靠的就是这个边界；
           清洗时把换行一律压平，会让「按段累积分块」永不生效（P0·6）。
-    应用场景：assign_content_to_catalogue 归类前逐页清洗。
+    应用场景：assign_content_to_catalogue 按目录分页前逐页清洗。
     输入：text — 该页原始 markdown；strip_images — 是否去掉 markdown 图片。
     输出：段间是空行、段内没有换行的页正文；清洗后为空则空串。
     """
@@ -274,7 +274,7 @@ def _assemble_pieces_with_pages(texts: list[str], pages: list, max_doc_tokens: i
     if not texts:
         return []
 
-    # 页间用哨兵分隔，这样同一页内部的空行分段不会被误认成翻页
+    # 页间用分隔符隔开，这样同一页内部的空行分段不会被误认成翻页
     sentinel = "\x00"
     segments = []
     for page_no, text in zip(pages, texts):
@@ -290,7 +290,7 @@ def _assemble_pieces_with_pages(texts: list[str], pages: list, max_doc_tokens: i
     if not segments:
         return []
 
-    # 相邻且同页的段用空行还原（等于原来逐页 join），翻页处用哨兵
+    # 相邻且同页的段用空行还原（等于原来逐页 join），翻页处用分隔符
     pieces = []
     for index, (body, page_no) in enumerate(segments):
         text = body
@@ -328,7 +328,7 @@ def chunks_from_assigned_rows(
     """
     同一目录标题下的正文页拼成知识块；单块超限再按段切开。
 
-    功能：写入合同字段 source/pages，以及过滤标签 tags。
+    功能：写入约定字段 source/pages，以及过滤标签 tags。
           页码是**块级**的：超限切出的每个子块只带自己覆盖的页，不带整节页。
     应用场景：有印刷目录时入库。
     输入：assigned_rows — 本文件 assign_content_to_catalogue 产出；source_name — 文档身份；tags — 过滤标签。
@@ -385,9 +385,9 @@ def chunks_from_plain_text(
     max_doc_tokens: int = 1800,
 ) -> list[dict]:
     """
-    无目录时的知识块：按 kind 切分，加上合同 metadata。
+    无目录时的知识块：按 kind 切分，加上约定 metadata。
 
-    功能：每块一个 id；source/pages 进合同；tags 当过滤标签。
+    功能：每块一个 id；source/pages 进约定；tags 当过滤标签。
     应用场景：目录行为空、或以后接任意纯文本。
     输入：doc_text — 原文；kind — pdf 或其它；source_name — 文档身份；tags — 过滤标签。
     输出：[{id, text, metadata}, ...]。
@@ -412,11 +412,11 @@ def chunks_from_plain_text(
 
 def chunks_from_chunkable_source(source_obj: dict, max_doc_tokens: int = 1800) -> list[dict]:
     """
-    可分块原文 → 知识块合同。
+    可分块原文 → 知识块约定。
 
     功能：有 pages 且有 catalogue_ranges 则按目录标题拼块；否则按 kind 切纯文本。
     应用场景：向量层读可分块原文之后。
-    输入：source_obj — 合同可分块原文（source/kind，pages 或 text）；max_doc_tokens — 单块上限。
+    输入：source_obj — 符合约定的可分块原文（source/kind，pages 或 text）；max_doc_tokens — 单块上限。
     输出：[{id, text, metadata}, ...]。
     """
     source_name = source_obj["source"]

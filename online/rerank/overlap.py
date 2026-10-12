@@ -10,7 +10,7 @@ from conf import TOP_K
 
 def rerank_hits(hits: list[dict]) -> list[dict]:
     """
-    精排窗口：保持召回顺序，截 TOP_K。
+    重排窗口：保持召回顺序，截 TOP_K。
 
     功能：不换序。截完交给同节邻块、拒答与生成。
           原形参 `question` 属于已拆掉的词重叠重排，没有调用方读它，已去掉。

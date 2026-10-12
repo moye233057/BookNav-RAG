@@ -70,10 +70,10 @@ def make_embedder():
 
 def run_vector(source_path: Path) -> Path:
     """
-    一份可分块原文走完分块、向量、落盘。
+    一份可分块原文走完分块、向量、写成文件。
 
     功能：分块 → 调向量服务 → 按来源替换写入 LanceDB chunks 表 → 写 step4_chunks.json。
-          step4 在写库成功之后才落盘：embed 或写库失败时不许留下「step4 新 / 库旧」的半成品。
+          step4 在写库成功之后才写成文件：embed 或写库失败时不许留下「step4 新 / 库旧」的半成品。
     应用场景：scripts/ingest.py 阶段2。
     输入：source_path — chunkable_source.json。
     输出：LanceDB 目录路径。
@@ -84,13 +84,13 @@ def run_vector(source_path: Path) -> Path:
     chunks = chunks_from_chunkable_source(source_obj, max_doc_tokens=MAX_DOC_TOKENS)
     if not chunks:
         raise ValueError(f"知识块为空，检查可分块原文 {source_path}")
-    print(f"[向量层] 分块完成 chunks={len(chunks)}（step4 等写库成功后再落盘）")
+    print(f"[向量层] 分块完成 chunks={len(chunks)}（step4 等写库成功后才写文件）")
 
     embedder = make_embedder()
     print(f"[向量层] embedder={embedder.name} source={source_obj['source']}")
     if EMBEDDER_KIND != "http":
-        # 占位向量不是语义检索：它建出的表钉死在 EMBED_DIM 维，换回语义模型时对不上（TODO P1·11）
-        print(f"[向量层] 注意：EMBEDDER_KIND={EMBEDDER_KIND}，本次入库用的是占位向量，不是语义模型")
+        # 临时占位向量不是语义检索：它建出的表写死在 EMBED_DIM 维，换回语义模型时对不上（TODO P1·11）
+        print(f"[向量层] 注意：EMBEDDER_KIND={EMBEDDER_KIND}，本次入库用的是临时占位向量，不是语义模型")
     texts = [chunk["text"] for chunk in chunks]
     vectors = embedder.embed_texts(texts)
     dim = embedder.dim or len(vectors[0])
@@ -105,7 +105,7 @@ def run_vector(source_path: Path) -> Path:
     store.replace_source(source_obj["source"], chunks, vectors, embedder.name, dim)
     print(f"[向量层] 已写入 {LANCEDB_DIR} source={source_obj['source']} chunks={len(chunks)} dim={dim}")
 
-    # 写库成功才落 step4：失败时库里还是旧的，step4 不许单独变成新的
+    # 写库成功才写 step4 文件：失败时库里还是旧的，step4 不许单独变成新的
     chunks_path = result_dir / "step4_chunks.json"
     chunks_path.write_text(json.dumps(chunks, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[向量层] 已写入 {chunks_path} chunks={len(chunks)}")

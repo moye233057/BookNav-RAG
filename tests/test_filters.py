@@ -2,8 +2,8 @@
 """
 过滤层的单元测试。
 
-职责：钉住 online/filter/tags.py 的语义——
-      `source_matches`：空串不限来源、来源精确相等（硬筛，ADR-0035 之后只留来源这一维）；
+职责：锁定 online/filter/tags.py 的含义——
+      `source_matches`：空串不限来源、来源精确相等（按来源强制筛选，ADR-0035 之后只留来源这一维）；
       `tag_match_count`：标签只算命中条数（0 = 不加权），缺 tags 的旧块当 []，
       同字段多值各算一条（不再 AND 成 0）。
 
@@ -27,7 +27,7 @@ def _metadata(**tags):
 
 
 def test_空来源不限():
-    """source 空串 = 该维不限，标签不参与硬筛。"""
+    """source 空串 = 该维不限，标签不参与强制筛选。"""
     assert source_matches("某手册", empty_filters()) is True
 
 

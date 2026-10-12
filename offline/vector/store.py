@@ -3,7 +3,7 @@
 向量库 LanceDB 后端与进程内 BM25。
 
 使用前注意事项：
-- HashEmbedder 不是语义模型，只为不依赖外部 embedding 服务时把链路跑通。
+- HashEmbedder 不是语义模型，只为不依赖外部 embedding 服务时把流程跑通。
 - HttpEmbedder 认 OpenAI 兼容的 data[].embedding；URL 与模型名由调用方常量传入。
 - HttpEmbedder 按 request_batch 切批（0 = 整批一个请求），一批以上时每批打一行 [向量层] 进度：
   整库入库在 CPU 上要十几分钟，没有进度输出会被当成卡死。
@@ -45,7 +45,7 @@ def _is_writing_source(source: str) -> bool:
 
 
 class HashEmbedder:
-    """字符散列占位向量。"""
+    """字符散列临时占位向量。"""
 
     def __init__(self, dim: int = 256):
         self.dim = dim
@@ -174,7 +174,7 @@ def _pages_list(value) -> list:
 
 
 def _check_vectors(vectors: list[list[float]], dim: int) -> None:
-    """建表前的自洽校验：向量非空、等长、且等于调用方声明的 dim。
+    """建表前的一致性校验：向量非空、等长、且等于调用方声明的 dim。
 
     异常：空批、长度不一致、与声明维数不符 → ValueError。
     """

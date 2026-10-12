@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "--vector-only",
         action="store_true",
         help="跳过抽取，复用已有的 data/result/<来源>/chunkable_source.json 只重跑向量层"
-             "（改过分块或页码口径、embed 服务曾经不可用时用这个）",
+             "（改过分块或页码判据、embed 服务曾经不可用时用这个）",
     )
     args = parser.parse_args()
 

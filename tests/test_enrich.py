@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-入库标签抽取的解析与「抽空可见」：钉住 P1·12 的两半。
+入库标签抽取的解析与「抽空看得见」：锁定 P1·12 的两半。
 
-职责：钉住 offline/extract/enrich.py 的三件事——
+职责：锁定 offline/extract/enrich.py 的三件事——
       1. 抠 JSON 用花括号配对，不贪婪：模型输出「思考 + JSON」「两个 JSON 对象」都要能拿到 tags；
       2. 认不出来返回 []（不抛），来源身份 / 空项 / 重复项 / 非字符串字段都不许把入库打崩；
       3. 抽空**不是静默降级**：解析失败要打出原因与模型原始输出，入库汇总要把这些来源单独列出来。
       没有 1 会退回改前那个贪婪正则：`re.search(r"\\{.*\\}", DOTALL)` 在两个对象上从第一个 `{`
-      框到最后一个 `}`，json.loads 必失败 → 整个 tags 变 []，而入库照样算成功；
+      一直跨到最后一个 `}`，json.loads 必失败 → 整个 tags 变 []，而入库照样算成功；
       没有 3 则一份「没有标签的文档」混在「成功 N」里，没人看得出来。
 
 应用场景：改 enrich.py 的解析、或改 scripts/ingest.py 的入库汇总之后跑
@@ -99,11 +99,11 @@ def test_最多留八条():
 # ========== 抽空要可见（P1·12 后半） ==========
 
 
-def test_解析不出标签时打出原因与原始输出(capsys, monkeypatch):
+def test_解析失败时打出原因与模型原始输出(capsys, monkeypatch):
     """抽空不是静默降级：要能看出是哪一步空的、模型到底给了什么。"""
     monkeypatch.setattr(enrich, "chat_text", lambda prompt: "这份手册我抽不出标签")
 
-    tags = enrich.infer_ingest_tags("正文摘录", "某手册")
+    tags = enrich.infer_ingest_tags("正文片段", "某手册")
     printed = capsys.readouterr().out
 
     assert tags == []
@@ -119,7 +119,7 @@ def test_模型调用失败也打出来(capsys, monkeypatch):
 
     monkeypatch.setattr(enrich, "chat_text", _boom)
 
-    tags = enrich.infer_ingest_tags("正文摘录", "某手册")
+    tags = enrich.infer_ingest_tags("正文片段", "某手册")
     printed = capsys.readouterr().out
 
     assert tags == []

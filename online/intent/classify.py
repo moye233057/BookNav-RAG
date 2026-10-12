@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-意图识别：闲聊/检索分类，并对照库内过滤标签给出本轮加权提示（ADR-0035：标签不硬筛）。标签候选在本文件，不是过滤层。
+意图识别：闲聊/检索分类，并对照库内过滤标签给出本轮加权提示（ADR-0035：标签不强制筛选）。标签候选在本文件，不是过滤层。
 """
 
 from __future__ import annotations
@@ -242,7 +242,7 @@ def infer_query_filters(question: str, catalog: dict, history: str = "") -> dict
 
     功能：先做目录子串匹配（代码那一路）；**字面命中就不调模型**（省一次 LLM）；
           都没命中才让模型从目录里挑，补字面命中不到的同义说法。
-          选出的 tags 交给召回层加权，不再当硬筛（ADR-0035）。
+          选出的 tags 交给召回层加权，不再当强制筛选（ADR-0035）。
     应用场景：在线图 intent 节点，写入本轮 filters。
     输入：question — 用户原文；catalog — {sources, tags}；history — 可空。
     输出：{source, tags}。source 空串=不限来源；tags 空=不加权。

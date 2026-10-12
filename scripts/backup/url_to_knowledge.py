@@ -2,8 +2,8 @@
 """
 把任意 URL / 本地文件变成可检索 kv 列表。
 
-状态：KV 实验，未接线。线上主路径与 tests 都不 import 本文件；它只写 `data/result/kv/`
-      和 KV 存储槽 `offline/store/kv_store.py`，不进抽取 entrance、不进召回（ADR-0005、ADR-0030）。
+状态：KV 实验，还没接进流程。线上主路径与 tests 都不 import 本文件；它只写 `data/result/kv/`
+      和 KV 存储预留实现 `offline/store/kv_store.py`，不进抽取 entrance、不进检索（ADR-0005、ADR-0030）。
       公开版不保留 KV 实验时，`scripts/backup/` 可整个删掉，其余功能不受影响。
 
 职责：KV 实验脚本。anyurl2text 抽原文。PIPELINE=text 接到向量层分块与向量库；PIPELINE=knowledge 抽 KV。
@@ -105,7 +105,7 @@ RETRIEVE_PROMPT = """
 
 你将收到：
 1）某一段原文（chunk_index=__CHUNK_INDEX__，来源：__KIND__）
-2）该段对应的“原子化知识点 JSON”（来自上一步抽取，颗粒度很细）
+2）该段对应的“原子化知识点 JSON”（来自上一步抽取，分得很细）
 
 目标：
 把该段的原子化知识点重组为更利于检索的二维知识库结构。要求检索时尽量“一次命中得到足够答案”。
@@ -275,7 +275,7 @@ def write_result(filename: str, text: str) -> Path:
     把本步产物写到 data/result/kv/<filename>。
 
     功能：确保 kv 目录存在后写 UTF-8 文本。
-    应用场景：各 step 落盘共用。
+    应用场景：各 step 写进磁盘共用。
     输入：filename — 如 step2_extracted.txt；text — 文件内容。
     输出：写出的路径。
     """
@@ -356,7 +356,7 @@ def step1_extract_text() -> dict:
 
 def step2_write_extracted(extract_payload: dict) -> dict:
     """
-    从抽取结果整理 kind / urls / text 并落盘原文。
+    从抽取结果整理 kind / urls / text 并写进磁盘。
 
     功能：kind 取 meta.ext；urls 从正文正则扫描；写 step2_extracted.txt。
     应用场景：流水线第 2 步。PIPELINE=text 时接着写可分块原文并入库。
@@ -417,7 +417,7 @@ def write_url_chunkable_source(text_data: dict) -> dict:
 
 def index_url_chunks(source_obj: dict) -> Path:
     """
-    共享分块后写入向量库。
+    共享分块后写进向量库。
 
     功能：调向量层 entrance.run_vector，与 ingest 同一条写库路径。
     应用场景：PIPELINE=text。
@@ -585,7 +585,7 @@ def step6_retrieve_rebuild(atomic_chunks: list[dict], kind: str) -> list[dict]:
 
 def step7_write_kv(retrieve_rows: list[dict]) -> list[dict]:
     """
-    把重组行转成 kv_list 并落盘。
+    把重组行转成 kv_list 并写进磁盘。
 
     功能：{index, content} → {key, value}；写 step7_knowledge_kv.json，并 upsert 进 kv_store.json。
     应用场景：流水线第 7 步。
@@ -633,7 +633,7 @@ if __name__ == "__main__":
     print(f"source={source}")
     # 阶段1：anyurl2text 抽原文 → data/result/kv/step1_extract_response.json
     extract_payload = step1_extract_text()
-    # 阶段2：扫 URL、落盘 data/result/kv/step2_extracted.txt
+    # 阶段2：扫 URL、写进磁盘 data/result/kv/step2_extracted.txt
     text_data = step2_write_extracted(extract_payload)
     if PIPELINE == "text":
         # 可分块原文 → 向量层写入 data/lancedb

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-会话护栏：session 限长限字符；turns 窗口截断。
+会话约束：session 限长限字符；turns 窗口截断。
 """
 
 from __future__ import annotations

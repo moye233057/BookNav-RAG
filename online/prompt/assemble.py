@@ -30,7 +30,7 @@ def assemble_handbook_inputs(
     """
     把检索命中收成提示变量，并收引用列表。
 
-    功能：excerpts 与 identity 给 HANDBOOK_PROMPT；citations 由命中截片段，不让模型自编出处。
+    功能：excerpts 与 identity 给 HANDBOOK_PROMPT；citations 由命中截原文片段，不让模型自编出处。
     应用场景：生成节点之前。
     输入：hits — 检索命中；question — 用户原文；tags — 本轮筛选芯片，可空。
     输出：({question, identity, excerpts}, citations)。

@@ -4,9 +4,9 @@
 
 职责：改写 / 分类 / 标签 → 检索或跳过 → rerank → 拒答、闲聊或生成。
 步骤：intent →（retrieve）recall → rerank → generate；闲聊 intent → generate
-      rerank 截 TOP_K 后再并同节邻块。
+    重排 截 TOP_K 后再并同节邻块。
 对外：build_ask_graph、run_ask_graph
-前置：知识库已 load；槽开关在 conf/base.py。
+前置：知识库已 load；预留开关在 conf/base.py。
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def _clip_turns(existing: list, new: list) -> list:
 
 
 class AskState(TypedDict):
-    """在线图状态：查询合同字段加中间命中、路由与会话轮次。"""
+    """在线图状态：查询约定字段加中间命中、路由与会话轮次。"""
 
     question: str
     text: str
@@ -133,7 +133,7 @@ def _normalize_filters(raw) -> dict:
 
 def _build_rewrite(question: str, retrieve_history: str) -> tuple[str, bool]:
     """
-    跑改写槽；失败退化为用户原文。
+    跑改写预留实现；失败退化为用户原文。
 
     功能：改写是可关的辅助调用，它的失败不允许打死整次提问（否则 HTTP 层会 502）。
     应用场景：图 intent 节点；评测核心。
@@ -221,7 +221,7 @@ def build_ask_graph(knowledge_base: KnowledgeBase):
         }
 
     def recall(state: AskState) -> dict:
-        """召回节点：来源硬筛与标签加权都在 search 内完成。"""
+        """召回节点：来源强制筛选与标签加权都在 search 内完成。"""
         hits = retrieve_hits(
             knowledge_base,
             state["text"],
@@ -231,7 +231,7 @@ def build_ask_graph(knowledge_base: KnowledgeBase):
         return {"hits": hits}
 
     def rerank(state: AskState) -> dict:
-        """精排节点：截 TOP_K，再并同节邻块。"""
+        """重排节点：截 TOP_K，再并同节邻块。"""
         cut = rerank_hits(state["hits"])
         return {"hits": knowledge_base.expand_hits_by_catalogue(cut)}
 
@@ -304,9 +304,9 @@ def ask_once_core(
     write_debug: bool = DEBUG_WRITE_QA,
 ) -> dict:
     """
-    单轮检索：与线上图同一顺序，停在精排之后，不调 LLM 生成。
+    单轮检索：与线上图同一顺序，停在重排之后，不调 LLM 生成。
 
-    功能：分类 → 改写 → 本轮筛选（沿用上一轮 / 对照库内目录）→ 召回 → 精排截 TOP_K → 同节邻块。
+    功能：分类 → 改写 → 本轮筛选（沿用上一轮 / 对照库内目录）→ 召回 → 重排截 TOP_K → 同节邻块。
           步骤与顺序跟图里的 intent / recall / rerank 一致；这是评测能对齐线上路径的前提。
     应用场景：scripts/eval_kb.py 正负样本判定；pytest 的在线路径测试。
     输入：knowledge_base — 已 load；question — 用户原文；turns — 历史轮（与图 state 同形状），可空；
@@ -357,7 +357,7 @@ def ask_once_core(
             resolved = infer_query_filters(question, knowledge_base.tag_catalog(), retrieve_history)
         text, rewrite_failed = _build_rewrite(question, retrieve_history)
 
-    # 召回 → 精排（截 TOP_K）→ 同节邻块
+    # 召回 → 重排（截 TOP_K）→ 同节邻块
     hits = retrieve_hits(knowledge_base, text, resolved, write_debug=write_debug)
     cut = rerank_hits(hits)
     expanded = knowledge_base.expand_hits_by_catalogue(cut)

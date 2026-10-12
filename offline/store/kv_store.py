@@ -2,12 +2,12 @@
 """
 KV 条目的本地 JSON 存储。提问口不读；实验脚本可写。
 
-状态：槽文件。线上主路径与 tests 都不 import 它（零调用），唯一写入方是
+状态：预留实现文件（先放着，本阶段不接进流程）。线上主路径与 tests 都不 import 它（零调用），唯一写入方是
       `scripts/backup/url_to_knowledge.py`。与 `offline/extract/methods/vlm_ocr.py` 同属
-      「已登记、不接线」的槽：不要删，也不要把 KV 接进召回路径（ADR-0005、ADR-0030）。
+      「已登记、不接进流程」的预留实现：不要删，也不要把 KV 接进召回路径（ADR-0005、ADR-0030）。
 
 使用前注意事项：
-- 合同字段：id、key、value、metadata.source；metadata.tags 可选。
+- 字段约定：id、key、value、metadata.source；metadata.tags 可选。
 - 不要把条目再编进向量库。精确匹配走本文件。
 """
 
@@ -28,7 +28,7 @@ class LocalKvStore:
         按 id 覆盖写入。
 
         功能：同 id 后写覆盖先写。
-        应用场景：scripts/backup/url_to_knowledge.py 阶段7（KV 实验，未接线）。
+        应用场景：scripts/backup/url_to_knowledge.py 阶段7（KV 实验，还没接进流程）。
         输入：entries — [{id, key, value, metadata}, ...]。
         输出：无，写入 self.records。
         """
@@ -44,7 +44,7 @@ class LocalKvStore:
 
     def save(self, path: Path) -> None:
         """
-        落盘 JSON。
+        写成 JSON 文件。
 
         功能：写出 records。
         应用场景：KV 抽取结束。

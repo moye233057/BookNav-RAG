@@ -2,13 +2,13 @@
 """
 评测样本与评测口的测试：样本文件自洽，拒答阈值扫点真有分辨力。
 
-职责：钉住四件事——
+职责：锁定四件事——
       1. scripts/eval_samples.json 的形状与自洽：id / question 唯一、条数 ≥50、分组认得、
          hit 样本必带 source 与 pages、负与闲聊样本不带 source/pages、requires_sources 只引用
          样本文件自己声明的来源；
       2. 多轮样本的 turns 形状与图写进 state 的轮次一致（question / text / answer / route /
          filters / tags）——少 answer 键会让 online.intent.classify.format_turns 抛 KeyError，
-         评测会在中途炸掉而不是给出结论（本条是实测踩到过的坑）；
+         评测会在中途失败而不是给出结论（本条是实测踩到过的注意点）；
       3. 命中判据按来源与页：来源对但页不相交不算中、页相交但来源不对也不算中；
       4. calibrate_threshold 的扫点真有分辨力：负样本余弦全在正样本之下时必须报出
          「不漏拒的最高阈值」且零误拒；负样本余弦高于正样本时不许假装有解（best_recall=None）。
@@ -122,7 +122,7 @@ def _row(sample_id: str, expect: str, cosine: float) -> dict:
 
 
 def test_阈值扫点能分辨正负样本():
-    """负样本余弦 0.30、正样本 0.90 / 0.75：分界必须落在两者之间，且边界不是空的。"""
+    """负样本余弦 0.30、正样本 0.90 / 0.75：分界必须停在两者之间，且边界不是空的。"""
     rows = [_row("pos-1", "hit", 0.90), _row("pos-2", "hit", 0.75), _row("neg-1", "refuse", 0.30)]
     result = calibrate_threshold(rows)
     assert result["positives"] == 2 and result["negatives"] == 1

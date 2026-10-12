@@ -23,18 +23,18 @@ INGEST_TAG_PROMPT = (
     "没有依据则 tags 为 []。最多 {max_tags} 条。不要重复。\n"
     "不要把文档文件名或来源身份当成标签。\n"
     "来源身份（不要写入 tags）：{source}\n\n"
-    "正文摘录：\n{sample}"
+    "正文片段：\n{sample}"
 )
 
 
 def sample_pages_text(page_rows: list[dict], max_pages: int = INGEST_TAG_PAGES) -> str:
     """
-    取前若干页拼成抽标签用的正文摘录。
+    取前若干页拼成抽标签用的正文原文片段。
 
     功能：按页顺序拼接，截到 INGEST_TAG_CHARS。
     应用场景：可分块原文写入前。
     输入：page_rows — [{page, text}, ...]；max_pages — 最多取几页。
-    输出：摘录字符串；没有正文则空串。
+    输出：原文片段字符串；没有正文则空串。
     """
     parts = []
     for page in page_rows[:max_pages]:
@@ -49,12 +49,12 @@ def sample_pages_text(page_rows: list[dict], max_pages: int = INGEST_TAG_PAGES) 
 
 def sample_content_text(content: dict) -> str:
     """
-    从文件内容收成抽标签用的摘录。
+    从文件内容收成抽标签用的原文片段。
 
     功能：有 pages 走 sample_pages_text；否则截 text。
     应用场景：collect 之前。
     输入：content — 抽取方式产出。
-    输出：摘录字符串。
+    输出：原文片段字符串。
     """
     if "pages" in content:
         return sample_pages_text(content["pages"])
@@ -151,7 +151,7 @@ def infer_ingest_tags(sample_text: str, source_name: str) -> list[dict]:
 
     功能：调 Chat；不要来源身份；失败或解析不出则 []，并且**把原因打出来**（抽空不是静默降级）。
     应用场景：写可分块原文时写入 tags。
-    输入：sample_text — 正文摘录；source_name — 文档身份。
+    输入：sample_text — 正文原文片段；source_name — 文档身份。
     输出：[{field, value}, ...]，抽不出则为 []。
     """
     sample = (sample_text or "").strip()

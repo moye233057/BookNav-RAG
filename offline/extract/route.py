@@ -3,7 +3,7 @@
 抽取路由：本阶段只登记本仓 PDF 抽页。
 
 使用前注意事项：有印刷目录则方式名 handbook。本仓 PDF 无目录记 pdf。
-      非 PDF 不走外仓；anyurl 槽未接线。
+      非 PDF 不走外仓；anyurl 是预留实现，还没接进流程。
       增方式：加 methods 文件并在 METHOD_EXTRACTORS 写一行。
       不按样本文件名切换。
 """
@@ -29,7 +29,7 @@ def extract_content(probe: dict) -> tuple[str, dict]:
     if ext != "pdf":
         raise RuntimeError(
             f"本阶段抽取只支持 PDF 手册，不支持 .{ext or '?'}；"
-            "anyurl2text 抽取口已解耦，methods/anyurl.py 为未接线槽"
+            "anyurl2text 抽取口已解耦，methods/anyurl.py 是还没接进流程的预留实现"
         )
     content = extract_content_for(METHOD_PDF, probe)
     if "catalogue_ranges" in content and content["catalogue_ranges"]:

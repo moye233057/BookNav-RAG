@@ -4,12 +4,12 @@
 
 职责：读 data/result/<来源>/chunkable_source.json、step4_chunks.json 与 data/lancedb 的 chunks 表，
       算出一组可核对的数字，对机械可证的不变量做断言并给出非零退出码。不写库，不调模型。
-      这是 P0·2：让已经发生的数据损坏从「靠人肉读 JSON」变成「一条命令报出来」。
+      这是 P0·2：让已经发生的数据损坏从「靠人手动翻 JSON」变成「一条命令报出来」。
       也是 P1·8：丢页不只报个数，还给每个丢页贴原因标签——「按设计丢的导航页 / 空页」
       与「真丢正文」必须分开算，否则正确丢掉的章扉页和目录截断丢的正文长得一模一样。
 
 原理（按系统流程）
-  离线链路是：源 → 抽取层（分页 + 目录区间 + tags）→ 可分块原文 → 向量层（分块 → 向量 → LanceDB）。
+  离线流程是：源 → 抽取层（分页 + 目录区间 + tags）→ 可分块原文 → 向量层（分块 → 向量 → LanceDB）。
   坏点位置决定哪个文件能发现它，本脚本只查前两个文件能发现的部分：
 
   1. 抽取层产出 chunkable_source.json：pages 是源的真实页。查「源一共几页」。
@@ -17,9 +17,9 @@
      - **页覆盖**：块声明页的并集 vs 源全部页。差集就是「一个字都没进任何块」的源页。
        这是静默故障（P1·8 治的就是这一类）：抽出来的正文被丢掉，不报错，引用和检索都少一块。
       - **丢页原因**（P1·8）：差集里每一页再过一遍分类——空文本 / 清洗后为空 / 导航页
-        （目录、索引、章扉页）/ 首条目录项之前 / 区间内未归页 / 这份来源没有目录区间。
-        前两类与导航页是**按设计丢的**；「首条目录项之前」与「区间内未归页」是**真丢正文**
-        （页码偏移、目录截断、归页漏 else 分支），计入 `MISSING_CONTENT_MAX` 阈值；
+        （目录、索引、章扉页）/ 首条目录项之前 / 区间内未分到页 / 这份来源没有目录区间。
+        前两类与导航页是**按设计丢的**；「首条目录项之前」与「区间内未分到页」是**真丢正文**
+        （页码偏移、目录截断、按目录分页漏 else 分支），计入 `MISSING_CONTENT_MAX` 阈值；
         「没有目录区间」那一类指向 P2·13，单列待确认，不混进阈值。
         另外把「判成章扉页却留着大段正文」的页记为**疑似误杀**：导航页判定用的
         「点线行 ≥5 且过半」是近似规则，正文页只要列了 5 条以上编号项就会被整页吃掉。
@@ -80,7 +80,7 @@ DEFAULT_CHUNKS = "data/result/demo_handbook/step4_chunks.json"
 # 签名串最短长度；太短会在别的页里偶然命中
 SIGNATURE_CHARS = 24
 # 「有正文、又不是导航页」的丢页上限（P1·8）：这类页没有别的解释，只能是页码偏移、
-# 目录截断或归页算法有洞丢掉的正文，超过这个数就报硬问题。设 0 表示一页都不许丢。
+# 目录截断或按目录分页的算法有洞丢掉的正文，超过这个数就报硬问题。设 0 表示一页都不许丢。
 MISSING_CONTENT_MAX = 0
 # 判成章扉页的页里，长正文行合计超过这个数 → 记「疑似误杀」（启发式，只进待确认）
 SUSPECT_NAVIGATION_BODY_CHARS = 200
@@ -154,7 +154,7 @@ def token_stats(chunks: list[dict]) -> dict:
 REASON_EMPTY_RAW = "空文本"
 REASON_EMPTY_CLEANED = "清洗后为空"
 REASON_FRONT_MATTER = "首条目录项之前"
-REASON_RANGE_HOLE = "区间内未归页"
+REASON_RANGE_HOLE = "区间内未分到页"
 REASON_NO_CATALOGUE = "来源没有目录区间"
 
 
@@ -188,8 +188,8 @@ def classify_missing_pages(
     给「一个字都没进任何块」的源页逐个贴原因标签。
 
     功能：按固定次序判一页为什么没进块——源页空 → 导航页（目录 / 索引 / 章扉页）→
-          清洗后为空 → 这份来源根本没有目录区间 → 页码在首条目录项之前 → 区间内未归页。
-          只有「首条目录项之前」与「区间内未归页」是**真丢正文**；
+          清洗后为空 → 这份来源根本没有目录区间 → 页码在首条目录项之前 → 区间内未分到页。
+          只有「首条目录项之前」与「区间内未分到页」是**真丢正文**；
           空页、导航页是按设计丢的，没有目录区间那一类指向 P2·13。
     应用场景：check_ingest 的丢页告警；命令行报告。
     输入：source_obj — 可分块原文；missing — 没进任何块的页号列表；suspect_body_chars — 疑似误杀阈值。
@@ -223,12 +223,12 @@ def classify_missing_pages(
             reasons[page_no] = REASON_EMPTY_CLEANED
             continue
         if first_start is None:
-            # 没有目录区间这一支本来就把 pages 写成 []（P2·13），不是归页漏了
+            # 没有目录区间这一支本来就把 pages 写成 []（P2·13），不是按目录分页漏了
             reasons[page_no] = REASON_NO_CATALOGUE
         elif page_no < first_start:
             reasons[page_no] = REASON_FRONT_MATTER
         else:
-            # 目录区间首尾相接，页码 ≥ 首条的页必定落进某一段；落不进就是归页漏了它
+            # 目录区间首尾相接，页码 ≥ 首条的页必定落进某一段；落不进就是按目录分页漏了它
             reasons[page_no] = REASON_RANGE_HOLE
 
     by_reason = {}
@@ -289,7 +289,7 @@ def check_ingest(
     page_texts = {int(page["page"]): page.get("text", "") for page in pages}
     signatures = {page_no: page_signature(text) for page_no, text in page_texts.items()}
 
-    # 页覆盖：块声明页的并集（与 eval_kb.py 的页判据同一口径：块自称覆盖哪些页）
+    # 页覆盖：块声明页的并集（与 eval_kb.py 的页判据同一判据：块自称覆盖哪些页）
     declared_union = set()
     declared_slots = 0
     page_claims = Counter()
@@ -392,7 +392,7 @@ def check_ingest(
     if classification["no_catalogue_pages"]:
         problems.append(
             f"{len(classification['no_catalogue_pages'])} 页有正文但这份来源没有目录区间："
-            f"无目录时 pages 恒为 []（P2·13），不是归页有洞"
+            f"无目录时 pages 恒为 []（P2·13），不是按目录分页漏了"
         )
     if len(tag_combos) <= 1 and len(chunks) > 1:
         problems.append(f"tags 组合唯一数 = {len(tag_combos)}：文档级标签复制到每块，块级过滤零区分度")
@@ -429,7 +429,7 @@ def check_store_sync(source: str, chunks: list[dict], records: list[dict]) -> di
     """
     核对分块产出与向量库是不是同一批块。
 
-    功能：按 id 比 step4 与库内同来源的块，再比每块的页码。写库成功后 step4 才落盘，两边必须一模一样。
+    功能：按 id 比 step4 与库内同来源的块，再比每块的页码。写库成功后 step4 才写进磁盘，两边必须一模一样。
     应用场景：命令行入口的库同步核对；pytest 直接调用（纯函数，不读盘）。
     输入：source — 来源名；chunks — step4 的知识块；records — 向量库记录（含 id / source / pages）。
     输出：{store_rows, step4_rows, ids_only_in_step4, ids_only_in_store, page_mismatches, hard_problems}。

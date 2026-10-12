@@ -6,7 +6,7 @@
   职责：开库一次，invoke 图一次，最后打一块问/途/答/引。
   入口步骤：
     1. open_knowledge_base — 读 data/lancedb，只做一次。
-    2. run_ask_graph — 意图 → 召回 → 精排 → 同节邻块 → 拒答或生成。
+    2. run_ask_graph — 意图 → 召回 → 重排 → 同节邻块 → 拒答或生成。
   输入：下面常量 QUESTION；FILTER_* 非空则覆盖意图标签。
   前置：已入库；embed_server.py 已起；生成需 Chat API key。
   产出：控制台「结果」块；召回调试仍写 data/result/qa/step2_hits.json。

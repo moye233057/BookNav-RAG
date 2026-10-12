@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-意图识别层：改写槽与跟进问句补全。
+意图识别层：改写预留实现与跟进问句补全。
 """
 
 import re
@@ -33,9 +33,9 @@ def _looks_like_followup(question: str) -> bool:
 
 def rewrite_query(text: str, history: str = "") -> str:
     """
-    Query 改写槽：只替换 text。
+    Query 改写预留实现：只替换 text。
 
-    功能：开槽则改成短检索问句；关槽时仅在有检索历史且问句像跟进时补全；否则原样。
+    功能：开关打开则改成短检索问句；开关关闭时仅在有检索历史且问句像跟进时补全；否则原样。
     应用场景：在线图 intent 节点。
     输入：text — 查询原文；history — 仅检索轮的历史文本，可空。
     输出：检索用 text。

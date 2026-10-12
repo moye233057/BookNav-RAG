@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-向量层入口的落盘顺序：step4 是向量库的旁证，必须写库成功之后才落。
+向量层入口的写进磁盘顺序：step4 是向量库的辅助证据，必须写库成功之后才写。
 
-职责：钉住 offline/vector/entrance.py::run_vector 的三件事——
-      1. embed 失败 → 抛错，且 step4_chunks.json **不落盘**（库里还是旧的，不许留半成品）；
-      2. 写库成功时才落 step4，落盘那一刻库里已经有这批块；
-      3. 落盘的 step4 与写进库的就是同一批块。
-      为什么要有这条契约：2026-10-08 的入库在 embed 阶段 ReadTimeout，
+职责：锁定 offline/vector/entrance.py::run_vector 的三件事——
+      1. embed 失败 → 抛错，且 step4_chunks.json **不写进磁盘**（库里还是旧的，不许留半成品）；
+      2. 写库成功时才写 step4，写进磁盘那一刻库里已经有这批块；
+      3. 写进磁盘的 step4 与写进库的就是同一批块。
+      为什么要有这条约定：2026-10-08 的入库在 embed 阶段 ReadTimeout，
       step4 已经是新的 138 块而 data/lancedb 还是旧的 137 行、78 块页码不同；
       在线检索读的是库，于是「分块改好了」这句话在线上并不成立。
       不调模型、不写真库：替换 entrance.make_embedder 与 entrance.LanceVectorStore。
 
-应用场景：改 run_vector 的落盘顺序之后跑 python -m pytest tests/test_vector_entrance.py。
+应用场景：改 run_vector 的写进磁盘顺序之后跑 python -m pytest tests/test_vector_entrance.py。
 """
 
 from __future__ import annotations
@@ -76,7 +76,7 @@ def fake_store(monkeypatch) -> dict:
     return recorded
 
 
-def test_embed失败时不落step4(work_dir, monkeypatch, fake_store):
+def test_embed失败时不写step4(work_dir, monkeypatch, fake_store):
     """embed 挂了就整批作废：step4 不许变成新的，否则库旧、文件新，没人看得出来。"""
     fake_store["step4_path"] = work_dir / "step4_chunks.json"
     monkeypatch.setattr(entrance, "make_embedder", lambda: _ExplodingEmbedder())
@@ -87,8 +87,8 @@ def test_embed失败时不落step4(work_dir, monkeypatch, fake_store):
     assert not (work_dir / "step4_chunks.json").exists()
 
 
-def test_写库成功后才落step4(work_dir, monkeypatch, fake_store):
-    """落盘顺序：写库在前、step4 在后。写库那一刻 step4 必须还不存在。"""
+def test_写库成功后才写step4(work_dir, monkeypatch, fake_store):
+    """写进磁盘的顺序：写库在前、step4 在后。写库那一刻 step4 必须还不存在。"""
     step4_path = work_dir / "step4_chunks.json"
     fake_store["step4_path"] = step4_path
     monkeypatch.setattr(entrance, "make_embedder", lambda: _FakeEmbedder())
@@ -99,7 +99,7 @@ def test_写库成功后才落step4(work_dir, monkeypatch, fake_store):
     assert step4_path.is_file()
 
 
-def test_落盘的step4就是写进库的那批块(work_dir, monkeypatch, fake_store):
+def test_写进磁盘的step4就是写进库的那批块(work_dir, monkeypatch, fake_store):
     """两个产出的块 id 必须一致：一份是检索读的，一份是调试看的。"""
     fake_store["step4_path"] = work_dir / "step4_chunks.json"
     monkeypatch.setattr(entrance, "make_embedder", lambda: _FakeEmbedder())

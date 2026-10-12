@@ -13,12 +13,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "book-nav-rag"
 version = "0.1.0"
-description = "BookNav-RAG 目录导航问答：印刷目录归页 + 在线检索；个人学习与展示，非商业生产"
+description = "BookNav-RAG 目录导航问答：印刷目录分页 + 在线检索；个人学习与展示，非商业生产"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12"
-# 唯一来源是 requirements.txt，逐行照抄（含 == 钉法）。改依赖先改 requirements.txt。
-# 注释与 requirements.txt 的分层说明保持一致；版本只钉本仓代码直接 import 的包，不列传递依赖。
+# 唯一来源是 requirements.txt，逐行照抄（含 == 锁定版本的做法）。改依赖先改 requirements.txt。
+# 注释与 requirements.txt 的分层说明保持一致；版本只锁定本仓代码直接 import 的包，不列传递依赖。
 dependencies = [
     # 离线抽取层
     "pymupdf4llm==1.28.2",

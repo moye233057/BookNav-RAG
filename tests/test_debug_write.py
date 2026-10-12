@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-在线调试题材的落盘开关与文件名：默认关，打开时按 session 分文件。
+在线调试题材的文件写入开关与文件名：默认关，打开时按 session 分文件。
 
-职责：钉住三件事——
+职责：锁定三件事——
       1. online/recall/retrieve.py::retrieve_hits 的 write_debug 默认取 conf 的 DEBUG_WRITE_QA，
          默认 False → 不写调试题材；
-      2. online/generate/answer.py::write_qa_result 在 DEBUG_WRITE_QA 关时直接返回，打开才落盘；
+      2. online/generate/answer.py::write_qa_result 在 DEBUG_WRITE_QA 关时直接返回，打开才写进磁盘；
       3. online/graph.py::debug_name 组装文件名（P2·31）：带 session、客户端给的脏 session
          拼不出 qa 目录之外的路径、没 session 时退回时间戳+随机 → 并发两问产出两个文件。
       为什么要有这条：2026-10-08 实测每问覆盖写 141KB 的 step2_hits.json，
       写盘抛 PermissionError 会穿透 router 变成 HTTP 500；并发时最后写者赢，调试信息本身是坏的。
-      不调 8030：假知识库 + hash 占位向量即可跑完 recall 这一层。
+      不调 8030：假知识库 + hash 临时占位向量即可跑完 recall 这一层。
 
-应用场景：改 DEBUG_WRITE_QA、debug_name 或这两处落盘之后跑本文件。
+应用场景：改 DEBUG_WRITE_QA、debug_name 或这两处写文件之后跑本文件。
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ def test_检索默认不写调试题材(work_dir, monkeypatch):
 
 
 def test_开关打开时写调试题材(work_dir, monkeypatch):
-    """打开开关才落盘：这是调试用的，不是线上路径的职责。"""
+    """打开开关才写进磁盘：这是调试用的，不是线上路径的职责。"""
     monkeypatch.setattr(answer, "QA_DIR", work_dir)
     monkeypatch.setattr(answer, "DEBUG_WRITE_QA", True)
 
@@ -57,7 +57,7 @@ def test_开关打开时写调试题材(work_dir, monkeypatch):
     assert (work_dir / "step3_answer.json").is_file()
 
 
-def test_开关关闭时不落盘(work_dir, monkeypatch):
+def test_开关关闭时不写文件(work_dir, monkeypatch):
     """关着的时候连目录都不建。"""
     monkeypatch.setattr(answer, "QA_DIR", work_dir)
     monkeypatch.setattr(answer, "DEBUG_WRITE_QA", False)
@@ -116,7 +116,7 @@ def test_两个会话各写各的调试题材(work_dir, monkeypatch):
     assert not (work_dir / "step3_answer.json").exists()
 
 
-def test_召回按给定的名字落盘(work_dir, monkeypatch):
+def test_召回按给定的名字写调试文件(work_dir, monkeypatch):
     """召回层也用调用方给的调试题材名，不再写死 step2_hits.json。"""
     monkeypatch.setattr(retrieve, "QA_DIR", work_dir)
 

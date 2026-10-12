@@ -4,7 +4,7 @@
 
 职责：probe → route → 抽取方式 → enrich → collect。不分块、不向量。
       由 scripts/ingest.py 调用；本文件无 __main__。
-输入：data/source/ 下扩展名在白名单里的文件（本阶段仅 PDF 本仓抽页；不依赖 anyurl2text）。
+输入：data/source/ 下扩展名在允许清单里的文件（本阶段仅 PDF 本仓抽页；不依赖 anyurl2text）。
 产出：data/result/<source>/chunkable_source.json。
 """
 

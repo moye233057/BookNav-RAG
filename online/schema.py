@@ -31,7 +31,7 @@ class FilterTag(BaseModel):
 
 
 class AskFilters(BaseModel):
-    """查询合同上的可选过滤。source 硬筛；tags 空则不加权（ADR-0035）。"""
+    """查询约定上的可选过滤。source 强制筛选；tags 空则不加权（ADR-0035）。"""
 
     source: str = ""
     tags: list[FilterTag] = Field(default_factory=list)

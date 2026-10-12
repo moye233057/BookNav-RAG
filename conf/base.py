@@ -27,7 +27,7 @@ EXTRACT_CATALOGUE_PREVIEW_PAGES = 40
 EXTRACT_CATALOGUE_STOP_PAGES = 3
 
 # 入口：只认这些后缀的源文件；其余文件跳过并打一行日志。
-# 本阶段只支持 PDF 本仓抽页，没有白名单时 data/source/README.txt 会被当成源（TODO P2·15）。
+# 本阶段只支持 PDF 本仓抽页，没有允许清单时 data/source/README.txt 会被当成源（TODO P2·15）。
 SOURCE_ALLOWED_SUFFIXES = frozenset({".pdf"})
 
 # ---------------------------------------------------------------------------
@@ -40,12 +40,12 @@ MAX_DOC_TOKENS = 1800
 # 入口：列出可分块原文时跳过这些产出目录
 SKIP_DIR_NAMES = frozenset({"kv", "qa"})
 
-# 嵌入客户端：http 调向量模型服务；hash 只打通链路，不是语义检索
+# 嵌入客户端：http 调向量模型服务；hash 只把流程跑通，不是语义检索
 EMBEDDER_KIND = "http"
 EMBED_DIM = 256
 EMBED_MODEL_NAME = "bge-m3"
-# 权重钉版：ModelScope 的 revision（分支名或 tag）。留空 = 用仓库默认分支，
-# 下载日志会明说未钉版（TODO P2·17）。
+# 权重锁定版本：ModelScope 的 revision（分支名或 tag）。留空 = 用仓库默认分支，
+# 下载日志会明说未锁定版本（TODO P2·17）。
 EMBED_MODEL_REVISION = ""
 # 首次建表前的期望维数（embedder 名 → 维数）。没登记的名字只校验「声明维数 == 实际向量维数」。
 # hash 用 256 抢跑建出表之后，bge-m3 的 1024 维再也写不进去，只能删库重入（TODO P1·11）。
@@ -126,9 +126,9 @@ RRF_K = 60
 CANDIDATE_MULTIPLIER = 4
 CANDIDATE_FLOOR = 20
 
-# 过滤标签是**加权信号，不是硬筛**（ADR-0035）：命中 N 条本轮标签的块加 N × TAG_BOOST_PER_HIT，
+# 过滤标签是**加权信号，不是强制筛选**（ADR-0035）：命中 N 条本轮标签的块加 N × TAG_BOOST_PER_HIT，
 # 封顶 TAG_BOOST_MAX。量级参照 RRF 单路头名 1/(RRF_K+0)≈0.0167，0.005 约是它的三成。
-# 硬筛只留给来源（文档身份）。
+# 强制筛选只留给来源（文档身份）。
 TAG_BOOST_PER_HIT = 0.005
 TAG_BOOST_MAX = 0.02
 
@@ -145,12 +145,12 @@ TOP_K = 5
 
 SNIPPET_CHARS = 180
 HANDBOOK_PROMPT = (
-    "根据下列摘录回答用户问题。操作、规格、步骤只根据摘录，不要编造摘录里没有的内容。"
+    "根据下列原文片段回答用户问题。操作、规格、步骤只根据原文片段，不要编造原文片段里没有的内容。"
     "文档身份可用于回答来源、品牌、车型、哪份文档；身份里没有的字段不要编造。"
     "不要在答案里列出处，出处由程序附加。\n\n"
     "问题：{question}\n\n"
     "文档身份：{identity}\n\n"
-    "摘录：\n{excerpts}"
+    "原文片段：\n{excerpts}"
 )
 
 # ---------------------------------------------------------------------------
@@ -166,7 +166,7 @@ REFUSE_MIN_SCORE = 0.4
 REFUSE_TEXT = "知识库里没有足够依据回答这个问题。"
 
 # 词面兜底（embed 服务不可用时只跑 BM25）：命中里必须出现查询词，否则拒答。
-# 纯 BM25 命中没有 vector_score，若沿用「没有向量分就放行」等于关掉拒答闸门。
+# 纯 BM25 命中没有 vector_score，若沿用「没有向量分就放行」等于关掉拒答开关。
 REFUSE_ON_LEXICAL_FALLBACK = True
 
 # Chat 密钥只走 DEEPSEEK_API_KEY（.env）
@@ -179,7 +179,7 @@ CHITCHAT_PROMPT = (
 )
 
 # ---------------------------------------------------------------------------
-# 在线调试落盘
+# 在线调试写进磁盘
 # ---------------------------------------------------------------------------
 
 # QA_DIR 在 conf/__init__.py，等于 RESULT_DIR / "qa"。

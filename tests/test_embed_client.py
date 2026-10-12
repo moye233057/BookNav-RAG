@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-embedding HTTP 客户端的分批契约：整个库不许塞进一个请求。
+embedding HTTP 客户端的分批约定：整个库不许塞进一个请求。
 
-职责：钉住 offline/vector/store.py::HttpEmbedder.embed_texts——
+职责：锁定 offline/vector/store.py::HttpEmbedder.embed_texts——
       1. 按 request_batch 切多次 POST，顺序拼回，结果顺序与输入一致；
       2. 段数不超过一批时只发一次；
       3. request_batch=0 才退回「整批一个请求」；
       4. 空输入不发请求；每一批都带上读超时。
-      为什么要有这条契约：bge-m3 在 CPU 上实测 4.6～6.0 s/段，138 段塞一个请求是
-      631～833s，超过客户端读超时后整批作废、服务端却照算完——白等一轮还占着编码锁。
+      为什么要有这条约定：bge-m3 在 CPU 上实测 4.6～6.0 s/段，138 段塞一个请求是
+      631～833s，超过客户端读超时后整批失败、服务端却照算完——白等一轮还占着编码锁。
       不碰网络：把 store.requests.post 换成记录用的替身。
 
 应用场景：改 embed 客户端或入库批大小之后跑 python -m pytest tests/test_embed_client.py。
@@ -36,7 +36,7 @@ class _FakeResponse:
         rows = []
         for index, text in enumerate(self._texts):
             suffix = text[1:]
-            # "t7" 用序号，其它文本用本次批内下标——两种情况都不炸
+            # "t7" 用序号，其它文本用本次批内下标——两种情况都不出问题
             rows.append({"embedding": [float(suffix) if suffix.isdigit() else float(index), 0.0]})
         return {"data": rows}
 
@@ -54,7 +54,7 @@ def posted(monkeypatch) -> list:
     return calls
 
 
-def test_按批切分并且结果顺序不变(posted):
+def test_分批请求后向量顺序与输入一致(posted):
     """20 段、批大小 16 → 两次 POST（16 + 4），拼回来仍是原来那 20 条且有序。"""
     embedder = HttpEmbedder(URL, "bge-m3", request_batch=16)
 

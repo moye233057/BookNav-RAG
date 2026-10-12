@@ -2,7 +2,7 @@
 """
 入库验收脚本自身的测试：页精度与丢页分类判据的判别力与误报边界。
 
-职责：钉住 scripts/verify_ingest.py::check_ingest 的页精度判据——
+职责：锁定 scripts/verify_ingest.py::check_ingest 的页精度判据——
       1. 同一节的子块各自只覆盖一部分页（块级页码）→ 放行；
       2. 相邻 part 都声明整节页、重叠 ≥2 页（P0·5 之前的样子，实测 3.21 倍）→ 报硬问题；
       3. 单页超限被按段切开，同一页出现在相邻两块 → **不报**硬问题，只进「跨块共用的页」指标；
@@ -12,7 +12,7 @@
 
       丢页一端（P1·8）：
       7. 导航页（目录 / 索引 / 章扉页）与空页按设计丢 → 分类报出并放行；
-      8. 有正文却没归页（区间内未归页 / 首条目录项之前）→ 报硬问题，阈值可调；
+      8. 有正文却没按目录分页（区间内未分到页 / 首条目录项之前）→ 报硬问题，阈值可调；
       9. 判成章扉页却留着大段正文 → 只记「疑似误杀」，不进硬断言（启发式）。
       没有 7 就退回「N 页有正文，需逐个确认」；没有 8 会让丢正文静默；没有 9 会让近似规则
       吃掉正文页而无声。没有 2 会漏掉真回归；没有 3 会变成常驻红线（正确数据也判未过）；
@@ -49,7 +49,7 @@ def _chunk(chunk_id: str, text: str, pages: list, part: int, title: str = "某�
     }
 
 
-def test_块级页码不重叠时硬断言放行():
+def test_块级页码不重叠时验收放行():
     """块级页码：part 0 带第 1 页、part 1 带第 2 页，无重叠，无硬问题。"""
     chunks = [_chunk("样本-0001", "正文一", [1], 0), _chunk("样本-0002", "正文二", [2], 1)]
 
@@ -133,7 +133,7 @@ def test_库与step4一致时放行():
 
 
 def test_库里缺块是硬问题():
-    """embed 失败时 step4 已经落盘而库没写：在线检索读库，答案会少一批。"""
+    """embed 失败时 step4 已经写进磁盘而库没写：在线检索读库，答案会少一批。"""
     chunks = [_chunk("样本-0001", "正文一", [1], 0), _chunk("样本-0002", "正文二", [2], 1)]
     records = [_record("样本-0001", [1])]
 
@@ -220,7 +220,7 @@ def test_导航页与空页丢页按原因分类且放行():
     assert result["hard_problems"] == []
 
 
-def test_有正文却没归页超过阈值就报硬问题():
+def test_有正文却没分到页超过阈值就报硬问题():
     """目录区间覆盖了这页，它却一个字都没进块——这就是 P1·8 要拦的静默丢正文。"""
     source = _source(
         [{"page": 1, "text": "正文一"}, {"page": 2, "text": "正文二"}],
@@ -229,7 +229,7 @@ def test_有正文却没归页超过阈值就报硬问题():
 
     result = check_ingest(source, [_chunk("样本-0001", "正文一", [1], 0)])
 
-    assert result["missing_classification"]["reasons"] == {2: "区间内未归页"}
+    assert result["missing_classification"]["reasons"] == {2: "区间内未分到页"}
     assert result["missing_classification"]["content_pages"] == [2]
     assert result["hard_problems"], "有正文的页被丢掉必须让验收脚本非零退出"
 

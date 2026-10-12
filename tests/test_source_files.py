@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-源文件入口的扩展名白名单。
+源文件入口的扩展名允许清单。
 
-职责：钉住 offline/extract/entrance.py::list_source_files 的三件事——
-      1. 非白名单后缀（`data/source/README.txt` 这类说明文件）不进抽取，且跳过的文件名要打出来；
+职责：锁定 offline/extract/entrance.py::list_source_files 的三件事——
+      1. 不在允许清单里的后缀（`data/source/README.txt` 这类说明文件）不进抽取，且跳过的文件名要打出来；
       2. 一个可入库的都没有 → FileNotFoundError，消息里给出支持的后缀；
       3. 后缀大小写不敏感（Windows 上 `手册.PDF` 本来就该入库）。
-      为什么要有这条：白名单之前 README.txt 会被当成源进抽取，在路由被拒后
+      为什么要有这条：加允许清单之前 README.txt 会被当成源进抽取，在路由被拒后
       scripts/ingest.py 只打印一行「失败」并且退 0，看着像入库成功。
 
 应用场景：改 SOURCE_ALLOWED_SUFFIXES 或 list_source_files 之后跑本文件。
@@ -26,7 +26,7 @@ def _make_sources(work_dir, names: list[str]):
     return work_dir
 
 
-def test_跳过非白名单源并报出文件名(work_dir, monkeypatch, capsys):
+def test_跳过不在允许清单里的源并报出文件名(work_dir, monkeypatch, capsys):
     """README.txt 不许进抽取，跳过要看得见，不许静默丢。"""
     _make_sources(work_dir, ["手册.pdf", "README.txt"])
     monkeypatch.setattr(entrance, "SOURCE_DIR", work_dir)

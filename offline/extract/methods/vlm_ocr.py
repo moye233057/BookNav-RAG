@@ -5,7 +5,7 @@
 使用前注意事项：
 - 接口形状按 OpenAI chat/completions，图用 data URL。
 - 命中 cache_dir/<图片名>.txt 则不再打模型。
-- 读不出字时模型应回 [NO_TEXT]，调用方跳过替换。
+- 读不出字时模型应回 [NO_TEXT]，调用方不替换该图。
 """
 
 from __future__ import annotations
@@ -129,7 +129,7 @@ def replace_md_images_with_ocr(
     把 markdown 图片换成 OCR 文本。
 
     功能：按出现顺序替换；文件找不到或 [NO_TEXT] 则跳过该图。
-    应用场景：目录页 / 正文页在归类前可选增强。
+    应用场景：目录页 / 正文页在按目录分页前可选增强。
     输入：text — 页 markdown；images_dir — pymupdf4llm 出图目录。
     输出：替换后的纯文本串（空白已压平）。
     """

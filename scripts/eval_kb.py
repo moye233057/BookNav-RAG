@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-评测口：跑线上那条检索路径（分类 / 改写 / 标签 / 召回 / 精排 / 同节邻块），判 Hit@k、拒答与闲聊路由。
+评测口：跑线上那条检索路径（分类 / 改写 / 标签 / 召回 / 重排 / 同节邻块），判 Hit@k、拒答与闲聊路由。
 
 职责：加载与问答同一份库，按样本文件逐条跑 online.graph.ask_once_core（与图 intent/recall/rerank 同一顺序），
-      拿精排后的命中判对错。不调 LLM 写答案，不组提示词。
+      拿重排后的命中判对错。不调 LLM 写答案，不组提示词。
       样本默认 scripts/eval_samples.json（公开 demo_handbook 小集）。
       本机第三方手册大集用 scripts/eval_samples.private.json（gitignore），例如：
       python scripts/eval_kb.py --samples scripts/eval_samples.private.json
       --calibrate 用同一批判定扫拒答阈值，给拒答阈值定依据（P1·28）。
 
 原理（按系统流程）
-  线上完整链路是：
-    意图（分类 / 改写 / 标签）→ 召回 → 精排（截成 TOP_K）→ 同节邻块 → 拒答或生成。
+  线上完整流程是：
+    意图（分类 / 改写 / 标签）→ 召回 → 重排（截成 TOP_K）→ 同节邻块 → 拒答或生成。
   本脚本每条样本走到「同节邻块」结束，拿到一份和线上生成窗口同形状的命中列表，立刻判对错，然后下一条。
   不组提示、不调 Chat 写答案。所以测的是检索排位，不是模型会不会只看前几条、忽视后面。
 
@@ -22,8 +22,8 @@
     refuse — 不看来源和页，看 should_refuse 会不会拒答（列表空，或最好的向量余弦低于阈值）。
     chitchat — 路由必须是闲聊且不召回。这是意图层的判据，不涉及检索质量。
 
-  页判据的口径：命中自带的 metadata.pages 是**块级**页码，所以「任一页相交即算中」不再必然成立。
-  这个口径可不可信，先跑 scripts/verify_ingest.py 看页精度那一项。
+  页判据的判据：命中自带的 metadata.pages 是**块级**页码，所以「任一页相交即算中」不再必然成立。
+  这个判据可不可信，先跑 scripts/verify_ingest.py 看页精度那一项。
 
   样本文件里跳过的两类（跳过数进汇总，不算未过）：
     - requires_sources 里有库内没有的来源（例如另外两份手册还没入库）；
@@ -40,7 +40,7 @@
      扫点用的是线上同一个 should_refuse（min_score 参数），不在本文件重抄判据。
 输入：命令行 --samples / --route / --limit / --strict / --calibrate。
 前置：已入库；embed_server.py 已起。分类与改写开时要 DEEPSEEK_API_KEY（--route 注入时不需分类，改写仍要）。
-产出：控制台分组汇总与阈值扫点；退出码 0=按 --strict 的口径通过，1=未过。**不落盘**（除只读之外不碰磁盘）。
+产出：控制台分组汇总与阈值扫点；退出码 0=按 --strict 的判据通过，1=未过。**不写进磁盘**（除只读之外不碰磁盘）。
 对外：_hit_at、load_samples、step2_check_samples、calibrate_threshold。
 """
 
@@ -183,7 +183,7 @@ def step2_check_samples(
             continue
 
         print(f"[评测] {label}")
-        # 与线上图同一顺序：意图 → 召回 → 精排 → 同节邻块；不写调试题材
+        # 与线上图同一顺序：意图 → 召回 → 重排 → 同节邻块；不写调试题材
         core = ask_once_core(
             knowledge_base,
             question,

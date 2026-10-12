@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-anyurl2text HTTP 抽取客户端（槽文件、零调用、未接线）。
+anyurl2text HTTP 抽取客户端（预留实现文件，零调用，还没接进流程）。
 
 使用前注意事项：
 - 曾 POST `/rag/extract/file`；该口已随外仓下线，手册抽取改由本仓 methods/pdf.py。
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 def extract_content(probe: dict) -> dict:
     """
-    退役槽：不再调外仓。
+    退役实现：不再调外仓。
 
     功能：拒绝调用并说明解耦原因。
     应用场景：误登记或旧脚本直接 import 时。
