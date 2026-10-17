@@ -3,7 +3,7 @@
 问答 HTTP 的请求与响应 schema。
 
 职责：POST /api/ask 的 Pydantic 模型。
-对外：AskBody、GenerationResult 等；字段与 web/src/api.ts 镜像。
+对外：AskBody、GenerationResult 等；字段与 frontend/src/api.ts 镜像。
 """
 
 from __future__ import annotations

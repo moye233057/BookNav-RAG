@@ -2,9 +2,9 @@
 """
 从本机推算的 ROOT，以及层与模块的开关、阈值、提示词。
 
-职责：ROOT 写入 sys.path。不要把盘符写进 yaml。层常量按注释分块；改开关后重启 ask_server.py；
+职责：ROOT 写入 sys.path。不要把盘符写进 yaml。层常量按注释分块；改开关后重启问答进程（python -m online.server）；
       改抽取或向量常量后重跑入库。相对目录见 config.yaml；第三方地址与密钥见 .env；host/port 见启动文件。
-对外：ROOT 与本文件各层常量。派生路径 MODEL_DIR、QA_DIR 在 conf/__init__.py。
+对外：ROOT 与本文件各层常量。派生路径 QA_DIR 在 conf/__init__.py；权重目录是 embed.MODEL_DIR。
 """
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ EMBED_DIM_BY_NAME = {"hash": EMBED_DIM, "bge-m3": 1024}
 # 向量模型服务（共享进程，不属于离线或在线）
 # ---------------------------------------------------------------------------
 
-# MODEL_DIR 在 conf/__init__.py，等于 BGE_MODEL_DIR
+# 权重目录是 embed.MODEL_DIR（embed/models/），不进 yaml
 BATCH_SIZE = 8
 # 客户端一次 POST 带几段正文。整个库塞进一个请求会让 bge-m3 在 CPU 上超过客户端读超时
 # （实测 4.6～6.0 s/段，138 段 = 631～833s > 600s），超时后整批作废而服务端照算。

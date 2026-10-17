@@ -16,16 +16,18 @@ __pycache__/
 venv/
 
 # 数据与权重一律不进仓：样例源文件、抽取产物、向量库、模型权重
-# data/source/ 只留一份说明（README.txt），第三方版权文档不要提交
+# data/source/ 只留说明和仓库自带演示手册，第三方版权文档不要提交
 /data/*
 !/data/source/
 /data/source/*
 !/data/source/README.txt
+!/data/source/demo_handbook.pdf
+/embed/models/
 /models/
 
 # 前端
-/web/node_modules/
-/web/dist/
+/frontend/node_modules/
+/frontend/dist/
 
 # 编辑器与杂项
 .vscode/

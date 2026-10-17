@@ -2,10 +2,10 @@
 """
 本地 bge-m3 → OpenAI 兼容 POST /v1/embeddings。
 
-职责：向量模型服务实现。进程入口是仓库根 embed_server.py。
-前置：models/<models_embedder>/pytorch_model.bin 或 model.safetensors；可用 python scripts/download_embed.py 下载。
+职责：向量模型服务实现与进程入口。
+前置：embed/models/ 下有 pytorch_model.bin 或 model.safetensors；可用 python embed/download_embed.py 下载。
 对外：serve(host, port)；POST /v1/embeddings。
-注意：默认端口在仓库根 embed_server.py。
+怎么跑：在仓库根 `python -m embed.server`。不要 `python embed/server.py`。
 """
 
 from __future__ import annotations
@@ -18,9 +18,16 @@ from pathlib import Path
 import torch
 from sentence_transformers import SentenceTransformer
 
-from conf import BATCH_SIZE, EMBED_MODEL_NAME, MODEL_DIR
+from conf import BATCH_SIZE, EMBED_MODEL_NAME
+
+from embed import MODEL_DIR
 
 _WEIGHT_FILE_NAMES = ("pytorch_model.bin", "model.safetensors")
+
+# ========== 按需修改 ==========
+HOST = "127.0.0.1"
+PORT = 8030
+# ==============================
 
 _model = None
 _encode_lock = threading.Lock()
@@ -33,7 +40,7 @@ def _weight_files() -> list[Path]:
 
 def load_model() -> SentenceTransformer:
     """
-    从仓内 models/<models_embedder> 加载。
+    从 embed/models/ 加载。
 
     功能：有 CUDA 用 GPU，否则 CPU。
     应用场景：服务启动一次。
@@ -44,7 +51,7 @@ def load_model() -> SentenceTransformer:
     if not _weight_files():
         raise FileNotFoundError(
             f"未找到权重 {MODEL_DIR}/pytorch_model.bin 或 model.safetensors，"
-            "先跑 python scripts/download_embed.py"
+            "先跑 python embed/download_embed.py"
         )
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"加载 {MODEL_DIR} device={device}")
@@ -131,7 +138,7 @@ def serve(host: str, port: int) -> None:
     加载模型并阻塞监听。
 
     功能：ThreadingHTTPServer 提供 /v1/embeddings。
-    应用场景：仓库根 embed_server.py。
+    应用场景：python -m embed.server。
     输入：host / port — 绑定地址。
     输出：无，阻塞直到进程退出。
     """
@@ -140,3 +147,7 @@ def serve(host: str, port: int) -> None:
     server = ThreadingHTTPServer((host, port), EmbeddingHandler)
     print(f"embeddings http://{host}:{port}/v1/embeddings")
     server.serve_forever()
+
+
+if __name__ == "__main__":
+    serve(HOST, PORT)

@@ -4,7 +4,7 @@
 
 职责：读 data/result/<source>/chunkable_source.json，写 step4_chunks.json，按来源写入 data/lancedb 的 chunks 表。
       不问答。不实现模型、不下权重。不写 step5 JSON。
-前置：抽取层已写出可分块原文；EMBEDDER_KIND=http 时 embed_server.py 已起。
+前置：抽取层已写出可分块原文；EMBEDDER_KIND=http 时 python -m embed.server 已起。
       由 scripts/ingest.py 调用；本文件无 __main__。
 """
 

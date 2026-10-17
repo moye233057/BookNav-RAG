@@ -25,7 +25,7 @@
   data/result/<source>/chunkable_source.json（text）
   data/result/kv/step7_knowledge_kv.json
   data/result/kv/kv_store.json
-前置：anyurl2text 已起；DEEPSEEK_API_KEY 已设环境变量，或写在本仓 .env。text 入库还需先起 embed_server.py。
+前置：anyurl2text 已起；DEEPSEEK_API_KEY 已设环境变量，或写在本仓 .env。text 入库还需先起 python -m embed.server。
 对外：step1_extract_text … step7_write_kv；write_url_chunkable_source；index_url_chunks；call_chat_json。
 """
 

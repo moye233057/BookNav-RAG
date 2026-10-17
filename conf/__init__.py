@@ -3,8 +3,9 @@
 项目公共配置。
 
 职责：读 conf/config.yaml 的相对目录；读 .env（第三方地址与密钥）；再导出 conf.base 的层开关。
-对外：ROOT、层与模块常量、SOURCE_DIR、RESULT_DIR、LANCEDB_DIR、MODELS_DIR、BGE_MODEL_DIR、
-      MODEL_DIR、QA_DIR、EMBED_API_URL、EMBED_API_KEY、CHAT_API_URL、CHAT_MODEL_NAME。
+对外：ROOT、层与模块常量、SOURCE_DIR、RESULT_DIR、LANCEDB_DIR、QA_DIR、
+      EMBED_API_URL、EMBED_API_KEY、CHAT_API_URL、CHAT_MODEL_NAME。
+权重目录不在这里：在 embed.MODEL_DIR（embed/models/）。
 另导出 ANYURL2TEXT_URL：抽取层已与 anyurl2text 解耦（ADR-0034），只剩 KV 实验脚本
       `scripts/backup/url_to_knowledge.py` 打它的 `/extract` 时用。密钥边界只有两处——
       进程环境变量与本仓 `.env`，不读别的仓。
@@ -109,15 +110,6 @@ _raw = _load_flat_yaml(_CONFIG_PATH)
 SOURCE_DIR = ROOT / _raw["data_source"]
 RESULT_DIR = ROOT / _raw["data_result"]
 LANCEDB_DIR = ROOT / _raw["data_lancedb"]
-MODELS_DIR = ROOT / _raw["models"]
-# 权重目录名走 config.yaml，不写死在代码里：换权重只改配置 + 重下（TODO P2·17）
-_MODEL_DIR_NAME = _raw.get("models_embedder", "").strip()
-if not _MODEL_DIR_NAME:
-    raise KeyError(
-        f"conf/config.yaml 缺 models_embedder（models/ 下的权重目录名，例如 bge-m3）：{_CONFIG_PATH}"
-    )
-BGE_MODEL_DIR = MODELS_DIR / _MODEL_DIR_NAME
-MODEL_DIR = BGE_MODEL_DIR
 QA_DIR = RESULT_DIR / "qa"
 
 apply_env()

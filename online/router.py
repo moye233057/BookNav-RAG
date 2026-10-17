@@ -3,7 +3,7 @@
 问答 HTTP 路由。
 
 职责：POST /api/ask。不是进程入口，没有 __main__。
-前置：ask_server.py 在 lifespan 里 open_knowledge_base。
+前置：online/server.py 在 lifespan 里 open_knowledge_base。
 对外：router；AskBody / Generation 字段见 schema.py。GET / 探活。
 """
 
@@ -16,7 +16,7 @@ from online.schema import AskBody, GenerationResult
 
 router = APIRouter()
 
-# ask_server lifespan 写入；提问前必须已 load
+# online.server lifespan 写入；提问前必须已 load
 knowledge_base = None
 
 
@@ -47,7 +47,7 @@ def ask(body: AskBody) -> dict:
     检索并生成带引用的答案。
 
     功能：调用在线图 intent →（闲聊则跳过召回）recall → rerank → generate。
-    应用场景：web 提问。
+    应用场景：问答页提问。
     输入：body.text — 查询；session 可空；filters 非空则覆盖意图标签。
     输出：{answer, citations, tags}。拒答开且证据不足时仍 200，citations 可空。
     """

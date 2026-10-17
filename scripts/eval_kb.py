@@ -39,7 +39,7 @@
   3. --calibrate：拿这一轮的「该答 / 该拒」和各自最好余弦扫一遍阈值，打 PR 曲线上的工作点。
      扫点用的是线上同一个 should_refuse（min_score 参数），不在本文件重抄判据。
 输入：命令行 --samples / --route / --limit / --strict / --calibrate。
-前置：已入库；embed_server.py 已起。分类与改写开时要 DEEPSEEK_API_KEY（--route 注入时不需分类，改写仍要）。
+前置：已入库；python -m embed.server 已起。分类与改写开时要 DEEPSEEK_API_KEY（--route 注入时不需分类，改写仍要）。
 产出：控制台分组汇总与阈值扫点；退出码 0=按 --strict 的判据通过，1=未过。**不写进磁盘**（除只读之外不碰磁盘）。
 对外：_hit_at、load_samples、step2_check_samples、calibrate_threshold。
 """

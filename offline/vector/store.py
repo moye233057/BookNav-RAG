@@ -117,7 +117,7 @@ class HttpEmbedder:
         vectors: list[list[float]] = []
         for index, start in enumerate(range(0, len(texts), size), start=1):
             vectors.extend(self._post_batch(texts[start : start + size]))
-            # 只有多批才报进度：在线单条查询是一批，别给 ask_server 的日志加噪音
+            # 只有多批才报进度：在线单条查询是一批，别给问答进程的日志加噪音
             if batch_total > 1:
                 print(
                     f"[向量层] 批 {index}/{batch_total} 已收 {len(vectors)}/{len(texts)} 段 "

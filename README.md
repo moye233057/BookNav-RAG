@@ -26,60 +26,49 @@
 
 远程仓库：https://github.com/moyezq/BookNav-RAG （镜像：https://gitee.com/osc_74795964/book-nav-rag）  
 许可证：[AGPL-3.0-only](LICENSE)  
-仓库**不收录** embedding 权重、第三方版权 PDF、本机私有评测集；演示样例见 `samples/demo_handbook.pdf`。
+仓库**不收录** embedding 权重、第三方版权 PDF、本机私有评测集；演示样例见 `data/source/demo_handbook.pdf`。
 
 ---
 
 ## 快速开始
 
-命令默认在**仓库根目录**执行。需要：Python 3.12、Node.js ≥ 18、约 2GB+ 磁盘（bge-m3 权重）。
+命令默认在**仓库根目录**执行。需要：uv、Node.js ≥ 18、约 2GB+ 磁盘（bge-m3 权重）。Python 版本由 `pyproject.toml` 的 `requires-python` 约束（≥ 3.12）。
 
 ### Ⅰ 安装依赖
 
-**A. conda（本机常用）**
-
 ```powershell
-conda env create -f environment.yml
-conda activate rag
-pip install -r requirements.txt
+uv sync
 ```
 
-**B. venv + pip**
+`uv sync` 按 `pyproject.toml` 建 `.venv`，并以可编辑方式装本仓。`conf` 用 `__file__` 推算仓库根，装成普通 wheel 会找不到 `.env` / `data/` / `embed/models/`。
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1   # macOS/Linux: source .venv/bin/activate
-pip install -e ".[dev]"
-```
-
-`-e` 不能省：`conf` 用 `__file__` 推算仓库根，装成普通 wheel 会找不到 `.env` / `data/` / `models/`。
+要跑 `tests/`：`uv pip install pytest`（只往当前 `.venv` 加这一个包），再 `uv run python -m pytest tests -q`。
 
 ```powershell
 copy .env_example .env
 # 编辑 .env，至少填 DEEPSEEK_API_KEY（入库抽标签与问答生成都要用）
 
-python scripts/download_embed.py
-# 权重下载到 models/bge-m3/，须有 pytorch_model.bin 或 model.safetensors
+uv run python embed/download_embed.py
+# 权重下载到 embed/models/，须有 pytorch_model.bin 或 model.safetensors
 
-cd web
+cd frontend
 npm install
 cd ..
 ```
 
-### Ⅱ 放入样例并入库
+### Ⅱ 入库
+
+演示手册已在 `data/source/demo_handbook.pdf`（自造 6 页）。把其它 PDF 也放进该目录。第三方版权文档只放本机、不要提交。
 
 ```powershell
-copy samples\demo_handbook.pdf data\source\
-# macOS/Linux: cp samples/demo_handbook.pdf data/source/
-
 # 入库要向量服务：先开一个终端
-python embed_server.py
+uv run python -m embed.server
 ```
 
-另开终端（同一 conda/venv）：
+另开终端（同一 uv 环境）：
 
 ```powershell
-python scripts/ingest.py
+uv run python scripts/ingest.py
 ```
 
 样例是**自造 6 页**短手册（目录 + 5 节正文）。CPU 上 bge-m3 大约几十秒到两分钟；看到 `[向量层] 批 n/N` 即在推进。结束后可关临时向量服务。
@@ -87,7 +76,7 @@ python scripts/ingest.py
 验收（可选）：
 
 ```powershell
-python scripts/verify_ingest.py --source "data/result/demo_handbook/chunkable_source.json" --chunks "data/result/demo_handbook/step4_chunks.json"
+uv run python scripts/verify_ingest.py --source "data/result/demo_handbook/chunkable_source.json" --chunks "data/result/demo_handbook/step4_chunks.json"
 ```
 
 预期量级：源 **6** 页、目录区间 **5**、入库约 **5** 块、声明页次 / 页并集 **= 1**。
@@ -95,7 +84,7 @@ python scripts/verify_ingest.py --source "data/result/demo_handbook/chunkable_so
 ### Ⅲ 一键起服务并试问
 
 ```powershell
-python start.py
+uv run python start.py
 ```
 
 | 入口 | 地址 |
@@ -107,7 +96,7 @@ python start.py
 
 `start.py` 会检查依赖、权重、非空知识库与端口，依次拉起 8030 / 8031 / 8032，就绪后打开浏览器；Ctrl+C 一并停掉。缺权重或尚未入库时会打印下一步，不会静默挂起。
 
-也可分开起：`python embed_server.py` → `python ask_server.py` → `cd web && npm run dev`。入库或改在线代码后请重启问答进程。
+也可分开起：`uv run python -m embed.server` → `uv run python -m online.server` → `cd frontend && npm run dev`。入库或改在线代码后请重启问答进程。
 
 **试问示例**（同一会话，**不要刷新**页面）：
 
@@ -117,7 +106,7 @@ python start.py
 | 2 | 支架怎么折叠 | 按手册说明折叠步骤；侧栏有引用，带来源与页码（约第 3 页） |
 | 3 | 那它怎么展开？ | 仍围绕支架；应答展开步骤（约第 4 页），侧栏继续有引用 |
 
-域外对照（可选）：问「红烧肉怎么做好吃」→ 宜拒答（文案含「没有足够依据」）。阈值 `REFUSE_MIN_SCORE=0.4`（`conf/base.py`）：曾在车手册库上测得域外余弦约 0.40～0.42，卡在边界；换库后用 `python scripts/eval_kb.py --calibrate` 重定。
+域外对照（可选）：问「红烧肉怎么做好吃」→ 宜拒答（文案含「没有足够依据」）。阈值 `REFUSE_MIN_SCORE=0.4`（`conf/base.py`）：曾在车手册库上测得域外余弦约 0.40～0.42，卡在边界；换库后用 `uv run python scripts/eval_kb.py --calibrate` 重定。
 
 ---
 
@@ -129,7 +118,7 @@ PDF → 抽取（页 + 印刷目录）→ 分块（块级页码）→ 8030 编�
 ```
 
 - **离线**：`scripts/ingest.py` 把抽取层与向量层连起来依次调用；写库成功后才写出 `step4_chunks.json`。目录页用动态扫描，不写死「只读前 N 页」。
-- **在线**：`ask_server.py` 启动时读库建 BM25；问答页只调 `POST /api/ask`。
+- **在线**：`python -m online.server` 启动时读库建 BM25；问答页只调 `POST /api/ask`。
 - **页码**：子块只声明自己覆盖的页；`verify_ingest.py` 检查「声明页次 / 页并集 = 1」。
 - **过滤**：文档身份 `source` 精确相等就强制筛选（不参与打分）；动态标签 `{field,value}` 按命中条数加权，不强制筛选候选。
 - **降级**：8030 不可用时走纯 BM25，拒答改看词面规则。
@@ -146,7 +135,7 @@ curl -X POST http://127.0.0.1:8031/api/ask -H "Content-Type: application/json" -
 
 响应含答案文本与 citations（来源、页码、原文片段）。浏览器打开 http://127.0.0.1:8031/docs 可交互试。
 
-命令行：`scripts/query_kb.py`（单轮）、`scripts/chat_kb.py`（多轮）。单元测试：`python -m pytest tests -q`（不调 LLM、不调 8030）。
+命令行：`scripts/query_kb.py`（单轮）、`scripts/chat_kb.py`（多轮）。单元测试：`uv pip install pytest` 后 `uv run python -m pytest tests -q`（不调 LLM、不调 8030）。
 
 ---
 
@@ -155,18 +144,15 @@ curl -X POST http://127.0.0.1:8031/api/ask -H "Content-Type: application/json" -
 ```text
 book-nav-rag/
 ├── start.py                 # 一键起 8030/8031/8032
-├── ask_server.py            # 问答 HTTP
-├── embed_server.py          # 向量 HTTP
-├── embed/                   # 向量服务实现
+├── pyproject.toml           # 包清单与 pytest；uv sync
+├── embed/                   # 向量服务；入口 python -m embed.server；权重 embed/models（不进仓）
 ├── conf/                    # ROOT、开关、路径
 ├── offline/extract/         # PDF 抽取、目录、标签
 ├── offline/vector/          # 分块、LanceDB
-├── online/                  # 意图、召回、生成、图编排
-├── web/                     # 问答页（Vite 8032）
-├── scripts/                 # 入库、验收、评测、下载权重、生成样例 PDF
-├── samples/                 # 可再分发演示 PDF（进仓）
-├── data/source/             # 你的 PDF（不进仓，仅 README.txt）
-├── models/                  # embedding 权重（不进仓）
+├── online/                  # 意图、召回、生成、图编排；入口 python -m online.server
+├── frontend/                # 问答页（Vite 8032）；视觉规范 DESIGN.md
+├── scripts/                 # 入库、验收、评测、生成样例 PDF
+├── data/source/             # 待入库 PDF；演示手册进仓，其余不进仓
 └── docs/                    # 内部说明，日常使用不必读
 ```
 
@@ -195,7 +181,7 @@ Copyright (c) 2026 moye
 | `pymupdf4llm` | AGPL-3.0 或商业授权；驱动本仓 PDF 抽页 |
 | bge-m3 权重 | 不进仓；按 ModelScope 模型卡许可自行下载 |
 | Chat API（如 DeepSeek） | 密钥只放本机 `.env`，勿提交 |
-| `samples/demo_handbook.pdf` | 自造演示手册，可再分发 |
+| `data/source/demo_handbook.pdf` | 自造演示手册，可再分发 |
 | 第三方厂商手册 | 只可放本机 `data/source/`，已被 gitignore |
 
 换 embedding 或维数后删 `data/lancedb` 再入库。完整开关与阈值在 `conf/base.py`。

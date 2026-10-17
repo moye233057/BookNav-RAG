@@ -2,7 +2,7 @@
 """
 生成可再分发的演示手册 PDF（自造内容，非第三方版权）。
 
-职责：写出 samples/demo_handbook.pdf，带「目 录」页与若干正文页，供入库与 README 演示三问。
+职责：写出 data/source/demo_handbook.pdf，带「目 录」页与若干正文页，供入库与 README 演示三问。
 不入库、不起服务。
 
 怎么跑：在仓库根执行 `python scripts/make_demo_pdf.py`
@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-OUT_PATH = ROOT / "samples" / "demo_handbook.pdf"
+OUT_PATH = ROOT / "data" / "source" / "demo_handbook.pdf"
 
 # 目录印刷页码 = PDF 阅读器页码（与 pdf.py 约定一致）
 TOC_ENTRIES = (
@@ -123,7 +123,7 @@ def _wrap_line(text: str, *, width: int) -> list[str]:
 def main() -> int:
     build_pdf(OUT_PATH)
     print(f"已写入 {OUT_PATH.relative_to(ROOT)}（{len(BODY_PAGES) + 1} 页）")
-    print("复制到 data/source/ 后执行：python scripts/ingest.py")
+    print("下一步：python scripts/ingest.py")
     return 0
 
 

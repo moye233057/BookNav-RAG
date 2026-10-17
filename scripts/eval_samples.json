@@ -1,6 +1,6 @@
 {
   "corpus_sources": ["demo_handbook"],
-  "notes": "公开评测样本：只覆盖 samples/demo_handbook.pdf（自造可再分发）。第三方手册上的大样本集见本机 scripts/eval_samples.private.json（gitignore，不进仓）。",
+  "notes": "公开评测样本：只覆盖 data/source/demo_handbook.pdf（自造可再分发）。第三方手册上的大样本集见本机 scripts/eval_samples.private.json（gitignore，不进仓）。",
   "samples": [
     {
       "id": "pos-fold-01",

@@ -9,7 +9,7 @@
   1. step1_extract — 一份源 → data/result/<stem>/chunkable_source.json
   2. step2_vector — 可分块原文 → step4_chunks.json 与 data/lancedb chunks 表
 输入：data/source/ 下的文件。PROCESS_ONLY 非空则只跑名单里的那几份。
-前置：embed_server.py 已起（EMBEDDER_KIND=http）。仅 PDF 本仓抽页，不依赖 anyurl2text。
+前置：python -m embed.server 已起（EMBEDDER_KIND=http）。仅 PDF 本仓抽页，不依赖 anyurl2text。
 只跑哪几份源，改本文件 PROCESS_ONLY（名字带后缀，与 data/source 下的名字一致；空元组 = 全部）。
 """
 
@@ -54,7 +54,7 @@ def step2_vector(chunkable_path: Path) -> Path:
     一份可分块原文走完向量层。
 
     功能：调 vector.entrance.run_vector。
-    应用场景：入库阶段2。须已起 embed_server.py。
+    应用场景：入库阶段2。须已起 python -m embed.server。
     输入：chunkable_path — chunkable_source.json。
     输出：LanceDB 目录路径。
     """

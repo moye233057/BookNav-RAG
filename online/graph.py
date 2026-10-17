@@ -381,7 +381,7 @@ def run_ask_graph(
     跑在线主路径，打出生成结果。
 
     功能：invoke 图；session 非空则按会话续 MemorySaver，turns 只给意图读。
-    应用场景：ask_server.py；scripts/query_kb.py；scripts/chat_kb.py。
+    应用场景：python -m online.server；scripts/query_kb.py；scripts/chat_kb.py。
     输入：knowledge_base — step1；question — 用户原文；filters — 可空，非空则覆盖意图标签；session — 会话 id。
     输出：生成结果 {answer, citations, tags}；另带 route、text 给命令行，HTTP schema 不收这两项。
     """

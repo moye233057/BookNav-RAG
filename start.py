@@ -5,7 +5,7 @@
 职责：检查环境 → 检查权重与端口 → 起三个子进程 → 等就绪 → 打开浏览器 → Ctrl+C 一起收掉。
 不入库、不下载权重；缺权重或尚未入库时打印下一步并退出。
 
-怎么跑：在仓库根执行 `python start.py`（先装好依赖与前端 node_modules）。
+怎么跑：在仓库根执行 `uv run python start.py`（先 `uv sync` 并装好前端 node_modules）。
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import webbrowser
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent
-WEB_DIR = PROJECT_DIR / "web"
+FRONTEND_DIR = PROJECT_DIR / "frontend"
 
 EMBED_HOST = "127.0.0.1"
 EMBED_PORT = 8030
@@ -60,35 +60,33 @@ def step1_check_python() -> bool:
     missing = [name for name in REQUIRED_PACKAGES if importlib.util.find_spec(name) is None]
     if missing:
         print("当前环境缺依赖：" + "、".join(missing))
-        print("先执行：pip install -r requirements.txt")
-        print("或：pip install -e \".[dev]\"")
+        print("先执行：uv sync")
         return False
     return True
 
 
 def step2_check_frontend() -> bool:
-    """检查 npm 与 web/node_modules。"""
+    """检查 npm 与 frontend/node_modules。"""
     if shutil.which("npm") is None:
         print("PATH 里找不到 npm：请安装 Node.js ≥ 18。")
         return False
-    if not (WEB_DIR / "node_modules").exists():
-        print(f"缺前端依赖：先执行 cd web && npm install")
+    if not (FRONTEND_DIR / "node_modules").exists():
+        print("缺前端依赖：先执行 cd frontend && npm install")
         return False
     return True
 
 
 def step3_check_weights() -> bool:
     """权重目录里要有 pytorch_model.bin 或 model.safetensors。"""
-    import conf
+    from embed import MODEL_DIR
 
-    model_dir = conf.BGE_MODEL_DIR
-    has_bin = (model_dir / "pytorch_model.bin").is_file()
-    has_safe = (model_dir / "model.safetensors").is_file()
+    has_bin = (MODEL_DIR / "pytorch_model.bin").is_file()
+    has_safe = (MODEL_DIR / "model.safetensors").is_file()
     if has_bin or has_safe:
-        print(f"向量权重：{model_dir}")
+        print(f"向量权重：{MODEL_DIR}")
         return True
-    print(f"未找到向量权重：{model_dir}/pytorch_model.bin 或 model.safetensors")
-    print("下一步：python scripts/download_embed.py")
+    print(f"未找到向量权重：{MODEL_DIR}/pytorch_model.bin 或 model.safetensors")
+    print("下一步：python embed/download_embed.py")
     return False
 
 
@@ -102,12 +100,11 @@ def step4_check_knowledge_base() -> bool:
         records, embedder_name, dim = store.load_payload()
     except FileNotFoundError as exc:
         print(f"尚未入库：{exc}")
-        print("下一步（样例 PDF）：")
-        print("  1. copy samples\\demo_handbook.pdf data\\source\\   # macOS/Linux: cp samples/demo_handbook.pdf data/source/")
-        print("  2. 确认根目录 .env 已填 DEEPSEEK_API_KEY（入库抽标签与问答都要用）")
-        print("  3. 另开终端起向量服务：python embed_server.py")
-        print("  4. python scripts/ingest.py")
-        print("  5. 停掉临时向量服务后，再跑 python start.py")
+        print("下一步（样例 PDF 已在 data/source/demo_handbook.pdf）：")
+        print("  1. 确认根目录 .env 已填 DEEPSEEK_API_KEY（入库抽标签与问答都要用）")
+        print("  2. 另开终端起向量服务：uv run python -m embed.server")
+        print("  3. uv run python scripts/ingest.py")
+        print("  4. 停掉临时向量服务后，再跑 uv run python start.py")
         return False
     print(f"知识库：{len(records)} 块，embedder={embedder_name}，dim={dim}")
     return True
@@ -128,13 +125,13 @@ def step5_check_ports() -> bool:
 def step6_start_embed() -> subprocess.Popen:
     """起向量服务（加载模型后才监听端口）。"""
     print(f"启动向量服务 → {EMBED_URL}")
-    return subprocess.Popen([sys.executable, "embed_server.py"], cwd=str(PROJECT_DIR))
+    return subprocess.Popen([sys.executable, "-m", "embed.server"], cwd=str(PROJECT_DIR))
 
 
 def step7_start_ask() -> subprocess.Popen:
     """起问答服务。"""
     print(f"启动问答服务 → {ASK_DOCS_URL}")
-    return subprocess.Popen([sys.executable, "ask_server.py"], cwd=str(PROJECT_DIR))
+    return subprocess.Popen([sys.executable, "-m", "online.server"], cwd=str(PROJECT_DIR))
 
 
 def step8_start_web() -> subprocess.Popen:
@@ -142,7 +139,7 @@ def step8_start_web() -> subprocess.Popen:
     print(f"启动问答页 → {WEB_URL}")
     npm = shutil.which("npm")
     assert npm is not None
-    return subprocess.Popen([npm, "run", "dev"], cwd=str(WEB_DIR))
+    return subprocess.Popen([npm, "run", "dev"], cwd=str(FRONTEND_DIR))
 
 
 def step9_wait_ready(

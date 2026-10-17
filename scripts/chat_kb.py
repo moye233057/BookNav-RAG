@@ -18,7 +18,7 @@
     1. open_knowledge_base — 读 data/lancedb，只做一次。
     2. 循环：input → run_ask_graph（带 session）→ print_turn。
   输入：键盘；不覆盖意图标签。
-  前置：已入库；embed_server.py 已起；生成需 Chat API key。
+  前置：已入库；python -m embed.server 已起；生成需 Chat API key。
   产出：控制台每一轮一块「结果」；召回调试仍写 data/result/qa/step2_hits.json（只留最后一条）。
   对外：无。print_turn 在 query_kb.py。
 """

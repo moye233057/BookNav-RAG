@@ -406,7 +406,7 @@ def open_knowledge_base() -> KnowledgeBase:
     打开一份逻辑知识库。
 
     功能：扫描 LanceDB chunks 表。
-    应用场景：ask_server.py 启动；命令行调试与评测口。
+    应用场景：python -m online.server 启动；命令行调试与评测口。
     输入：无，读 LANCEDB_DIR。
     输出：已 load 的 KnowledgeBase。
     """
